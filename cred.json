@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "lydinc",
+  "private_key_id": "1dc5396940f2c57e78988eb6c840314a643979b0",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDV/kQzYcj0o05A\nD4JwRDNhjGGcyfakWK8ggJL1cjKgfd5aEVFQnSnhwsCJQEIy4aFTgqDpADXXS8Ss\nIlT2MhJr/u2csHi1iCBAchjNOs2lKs7NJEdw2atzlp/sphxBSWb1k+7welB/EvCj\nbQWwFbqWMiWYHWHbUkjPSYuaav9qFWYsjP5RKXGu2MCFG1WYM2UbWi+vQ/KEjrBE\n3V4wbA7TrWDyOAUpzt0yrOEi5nlecSRxlcCJ1HRYNOhG0XLxad0aa83/b4BO03gx\nQX0Z8CxPvVL/gHTM/oExfe4feKrNGmRh9ksLDQS/92avH/3Md1BWq/KblEDcXahl\nUsrgggKjAgMBAAECggEAHpwg6FKn+qpzcoFlcKaozN7WRaW0FJ0k69rIaribmk52\n5F5Oyd+5UnRXsypQbdPNjlMErl+b1ACgENlWWuMdtHoCRiQOGDVxG5bWimDLcsFV\nVI3IdFGGj2Gv3ZuDNimIQz+WcaqlYg/1AQOCyUXKa1qf+wrU6RjzlkcYY43DnEpR\nXdRDczHLRxYyLr3K+IJvC58q0a7l5jhj6HFehbFl9Wm3M/QypPB9g9wn7lCmSx+F\nmO6cqlrK9DeFqHkCGR0WC22JNrVVlg4eRXNljYrkjMaIyt9i46DPbLSowcr7Bx5n\nRtZdUs3yVCMODU673s3LZurwT9vVagO0ezupBeEuMQKBgQDqT+jJH7mLgXCH93TB\npuyPw2JdEYPwAxc6TgFueZmTTqw7B8o+RYwfBT5soGR/XTkuxHQ8AnPA/4ESt5bD\n7FhACi2Vgj3U2GZIakOl1JnC/eWOnvm27IDeG+x0eXSKGk49A1UXGHuyjKJ7Tm1m\nQafkjHofH8NIet+pz7FgG1xIcQKBgQDpzOUOlKCQHnvjmXZOFH49dE7edVd8VnLN\nH2rzMbl9zhAHIoW8s7QEqfAspjX9H8SMrYVr+s9ws2S2XC+RPKnBpG2qJwWdHX31\nZAI5SAdkkEDVT4WrZw9MEQToW2Bko2lGICwS8Oh8KDvw5dEhmPAMc4zg9zs7eyUX\nziQNWRHmUwKBgH3cLJuUSfNQtSSj3HiE9H8IoZaCaQ+MaXatHgG8mazRzpvqxE0M\nyIaFJ5Hr2e+8IJIpfpIZcxoRZMCsEvTsyD6l+PRdQF9LWi29vtady3Y9MYiZhmMm\nyNYFw86QyvO/y5TkbFl6kj9HYaPAbe1GiSuv9Y0wX5JYRjoN0SZhrAFRAoGBAKt1\nhe4hdXb7xCNv4eD1CneLGmPubhBTXbGsfsSHDN+EBSEWYjm3GCfrcKVt514QtBXv\nE0/TCdo+1XcfOAstD9lg+sO0BlvoyvzxMOhNOI65c7J7tS20UPWZ7Z1xlcl4RbYV\n1fy2C+kxoHPUNoCLJlAbVY+OADRo5RUGKk5XqdbdAoGBAOir2Ql+UuCnqTzcx6Mr\naqddRQD+DizmaA/rICqaA3fpTwyqF+8rDW1kaGxrG5A4PbdpZxW0rIHMtf+sWRRX\nBJ8zNdozRWi4uixYB+wiC3HpiXUn9R12+t/B8LafgY2qrMKr84U47/pp80XJuARx\nOQyMJouP4V+if9B74qoUlo6t\n-----END PRIVATE KEY-----\n",
+  "client_email": "googledriveuploadexcelfile@lydinc.iam.gserviceaccount.com",
+  "client_id": "107421762373813136303",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/googledriveuploadexcelfile%40lydinc.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
