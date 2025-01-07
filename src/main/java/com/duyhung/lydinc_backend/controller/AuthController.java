@@ -20,7 +20,7 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> signIn(
             @RequestBody RegisterRequest registerRequest
-    ) throws Exception {
+    ) {
         return ResponseEntity.ok(authService.signIn(registerRequest));
     }
 
@@ -29,7 +29,7 @@ public class AuthController {
     public ResponseEntity<?> login(
             @RequestBody LoginRequest authRequest,
             HttpServletResponse response
-    ) throws Exception {
+    ) {
         return ResponseEntity.ok(authService.login(authRequest, response));
     }
 }

@@ -22,6 +22,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -44,7 +45,7 @@ public class AuthService {
     @Value("${jwt.refreshToken-expiration}")
     private int REFRESH_TOKEN_EXPIRY_DATE;
 
-    public String signIn(RegisterRequest request) throws Exception {
+    public String signIn(RegisterRequest request) {
         Optional<User> existingUser = userRepository.findByUsername(request.getUsername());
         if (existingUser.isPresent()) {
             return "Username is already taken.";

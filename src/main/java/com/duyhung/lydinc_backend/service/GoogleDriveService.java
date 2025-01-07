@@ -51,17 +51,38 @@ public class GoogleDriveService {
     }
 
     // Get files in a specific subfolder filtered by username
+    // Get files in a specific folder and resolve shortcuts
     public List<File> getFilesInFolder(String folderId, String username) throws IOException, GeneralSecurityException {
         Drive driveService = createDriveService();
         String query = String.format("'%s' in parents and name contains '%s'", folderId, username);
 
         FileList result = driveService.files().list()
                 .setQ(query)
-                .setFields("files(id, name, mimeType)")
+                .setFields("files(id, name, mimeType, shortcutDetails(targetId))")
                 .execute();
 
-        return result.getFiles();
+        List<File> files = result.getFiles();
+
+        // Resolve shortcuts
+        for (File file : files) {
+            if ("application/vnd.google-apps.shortcut".equals(file.getMimeType())) {
+                String originalFileId = file.getShortcutDetails().getTargetId();
+
+                // Retrieve the original file metadata
+                File originalFile = driveService.files().get(originalFileId)
+                        .setFields("id, name, mimeType")
+                        .execute();
+
+                // Replace shortcut file with the original file in the list
+                file.setId(originalFile.getId());
+                file.setName(originalFile.getName());
+                file.setMimeType(originalFile.getMimeType());
+            }
+        }
+
+        return files;
     }
+
 
     // Get all subfolders in the parent folder
     public List<File> getUserFolders() throws IOException, GeneralSecurityException {
