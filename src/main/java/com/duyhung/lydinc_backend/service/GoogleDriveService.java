@@ -35,7 +35,7 @@ public class GoogleDriveService {
     }
 
     @Value("${google-drive.parent-folder-id}")
-    private String parentFolderId;
+    public String parentFolderId;
 
     private Drive createDriveService() throws IOException, GeneralSecurityException {
         GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream(getPathToGoogleClient()))
@@ -52,63 +52,51 @@ public class GoogleDriveService {
 
     // Get files in a specific subfolder filtered by username
     // Get files in a specific folder and resolve shortcuts
-    public List<File> getFilesInFolder(String folderId, String username) throws IOException, GeneralSecurityException {
+    public String findSubfolderId(String parentFolderId, String subfolderName) throws IOException, GeneralSecurityException {
         Drive driveService = createDriveService();
-        String query = String.format("'%s' in parents and name contains '%s'", folderId, username);
-
-        FileList result = driveService.files().list()
-                .setQ(query)
-                .setFields("files(id, name, mimeType, shortcutDetails(targetId))")
-                .execute();
-
-        List<File> files = result.getFiles();
-
-        // Resolve shortcuts
-        for (File file : files) {
-            if ("application/vnd.google-apps.shortcut".equals(file.getMimeType())) {
-                String originalFileId = file.getShortcutDetails().getTargetId();
-
-                // Retrieve the original file metadata
-                File originalFile = driveService.files().get(originalFileId)
-                        .setFields("id, name, mimeType")
-                        .execute();
-
-                // Replace shortcut file with the original file in the list
-                file.setId(originalFile.getId());
-                file.setName(originalFile.getName());
-                file.setMimeType(originalFile.getMimeType());
-            }
-        }
-
-        return files;
-    }
-
-
-    // Get all subfolders in the parent folder
-    public List<File> getUserFolders() throws IOException, GeneralSecurityException {
-        Drive driveService = createDriveService();
-        String query = String.format("'%s' in parents and mimeType = 'application/vnd.google-apps.folder'", parentFolderId);
+        String query = String.format("'%s' in parents and name = '%s' and mimeType = 'application/vnd.google-apps.folder'", parentFolderId, subfolderName);
 
         FileList result = driveService.files().list()
                 .setQ(query)
                 .setFields("files(id, name)")
                 .execute();
 
-        return result.getFiles();
-    }
-
-    // Map files for each username folder
-    public Map<String, List<File>> getFilesFromUsernameFolders(String username) throws IOException, GeneralSecurityException {
-        List<File> subfolders = getUserFolders();
-        Map<String, List<File>> filesBySubfolder = new HashMap<>();
-
-        for (File subfolder : subfolders) {
-            List<File> filesInSubfolder = getFilesInFolder(subfolder.getId(), username);
-            if (!filesInSubfolder.isEmpty()) {
-                filesBySubfolder.put(subfolder.getName(), filesInSubfolder);
-            }
+        if (result.getFiles().isEmpty()) {
+            return null; // Subfolder not found
         }
 
-        return filesBySubfolder;
+        return result.getFiles().get(0).getId(); // Return the ID of the subfolder
     }
+
+    public File findFileInFolder(String folderId, String fileName) throws IOException, GeneralSecurityException {
+        Drive driveService = createDriveService();
+        String query = String.format("'%s' in parents and name = '%s'", folderId, fileName);
+
+        FileList result = driveService.files().list()
+                .setQ(query)
+                .setFields("files(id, name)")
+                .execute();
+
+        if (result.getFiles().isEmpty()) {
+            return null; // File not found
+        }
+
+        return result.getFiles().get(0); // Return the file
+    }
+
+
+    // Map files for each username folder
+//    public Map<String, List<File>> getFilesFromUsernameFolders(String username) throws IOException, GeneralSecurityException {
+//        List<File> subfolders = getUserFolders();
+//        Map<String, List<File>> filesBySubfolder = new HashMap<>();
+//
+//        for (File subfolder : subfolders) {
+//            List<File> filesInSubfolder = getFilesInFolder(subfolder.getId(), username);
+//            if (!filesInSubfolder.isEmpty()) {
+//                filesBySubfolder.put(subfolder.getName(), filesInSubfolder);
+//            }
+//        }
+//
+//        return filesBySubfolder;
+//    }
 }

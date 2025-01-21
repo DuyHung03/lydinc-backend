@@ -23,6 +23,7 @@ public class LydincBackendApplication implements CommandLineRunner {
             // Add predefined roles with auto-generated IDs
             roleRepository.save(new Role("STUDENT"));
             roleRepository.save(new Role("LECTURER"));
+            roleRepository.save(new Role("ADMIN"));
 
             System.out.println("Predefined roles have been initialized.");
         } else {

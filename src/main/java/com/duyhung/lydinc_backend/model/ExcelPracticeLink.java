@@ -5,22 +5,19 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.checkerframework.checker.units.qual.A;
-
-import java.util.List;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @Entity
-@Table(name = "school")
-public class School {
+@Table(name = "excel_practice_link")
+public class ExcelPracticeLink {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Integer schoolId;
-    String schoolName;
+    private Integer id;
 
-    @OneToMany(mappedBy = "school", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<User> students;
+    private String link;
+
+    private String studentId;
 }

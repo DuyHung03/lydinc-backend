@@ -5,7 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
 import java.util.Set;
 
 @Data
@@ -19,9 +18,10 @@ public class UserDto {
     private String phone;
     private String photoUrl;
     private String name;
-    private String gender;
-    private String birthday;
+    private Integer isPasswordFirstChanged;
+    private Integer isAccountGranted;
     private Set<String> roles;
+    private UniversityDto university;
 
     public UserDto(String userId, String username, String email) {
         this.userId = userId;

@@ -6,6 +6,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.util.List;
 
 @RestController
@@ -34,6 +36,6 @@ public class CourseController {
     public ResponseEntity<?> getCourseByStudent(String studentId) {
         return ResponseEntity.ok(courseService.getCourseByStudent(studentId));
     }
-
+    
 
 }

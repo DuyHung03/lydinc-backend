@@ -2,14 +2,18 @@ package com.duyhung.lydinc_backend.service;
 
 import com.duyhung.lydinc_backend.exception.AuthValidationException;
 import com.duyhung.lydinc_backend.model.Role;
+import com.duyhung.lydinc_backend.model.University;
 import com.duyhung.lydinc_backend.model.User;
 import com.duyhung.lydinc_backend.model.auth.AuthResponse;
 import com.duyhung.lydinc_backend.model.auth.LoginRequest;
 import com.duyhung.lydinc_backend.model.auth.RegisterRequest;
+import com.duyhung.lydinc_backend.model.dto.UniversityDto;
 import com.duyhung.lydinc_backend.model.dto.UserDto;
 import com.duyhung.lydinc_backend.repository.RoleRepository;
+import com.duyhung.lydinc_backend.repository.UniversityRepository;
 import com.duyhung.lydinc_backend.repository.UserRepository;
 import com.duyhung.lydinc_backend.utils.CookieUtils;
+import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -22,7 +26,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -38,6 +41,10 @@ public class AuthService {
     private final CookieUtils cookieUtils;
     private final ModelMapper modelMapper;
     private final AuthenticationManager authenticationManager;
+    private final UniversityRepository universityRepository;
+    private final EmailService emailService;
+    private final CourseService courseService;
+
 
     @Value("${jwt.accessToken-expiration}")
     private int ACCESS_TOKEN_EXPIRY_DATE;
@@ -45,11 +52,43 @@ public class AuthService {
     @Value("${jwt.refreshToken-expiration}")
     private int REFRESH_TOKEN_EXPIRY_DATE;
 
-    public String signIn(RegisterRequest request) {
+//    public String signIn(RegisterRequest request, Integer ) {
+//        Optional<User> existingUser = userRepository.findByUsername(request.getUsername());
+//        if (existingUser.isPresent()) {
+//            return "Username is already taken.";
+//        }
+//
+//        University university = universityRepository.findById(request.getUniversityId())
+//                .orElseThrow(() -> new RuntimeException("University not found"));
+//
+//        User user = User.builder()
+//                .username(request.getUsername())
+//                .email(request.getEmail())
+//                .phone(request.getPhone())
+//                .password(passwordEncoder.encode(request.getPassword()))
+//                .name(request.getName())
+//                .isPasswordFirstChanged(0)
+//                .isAccountGranted(1)
+//                .university(university)
+//                .roles(new HashSet<>())
+//                .build();
+//
+//        Role userRole = roleRepository.findByRoleId(1);
+//        user.getRoles().add(userRole);
+//
+//        userRepository.save(user);
+//
+//        return "User registered successfully!";
+//    }
+
+    public String createAccount(RegisterRequest request) throws MessagingException {
         Optional<User> existingUser = userRepository.findByUsername(request.getUsername());
         if (existingUser.isPresent()) {
             return "Username is already taken.";
         }
+
+        University university = universityRepository.findById(request.getUniversityId())
+                .orElseThrow(() -> new RuntimeException("University not found"));
 
         User user = User.builder()
                 .username(request.getUsername())
@@ -57,8 +96,9 @@ public class AuthService {
                 .phone(request.getPhone())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .name(request.getName())
-                .gender(request.getGender())
-                .birthday(request.getBirthday())
+                .isPasswordFirstChanged(0)
+                .isAccountGranted(1)
+                .university(university)
                 .roles(new HashSet<>())
                 .build();
 
@@ -66,8 +106,9 @@ public class AuthService {
         user.getRoles().add(userRole);
 
         userRepository.save(user);
+        emailService.sendEmailAccountGranted(request.getEmail(), request.getUsername(), request.getPassword());
 
-        return "User registered successfully!";
+        return "Create account and send email successfully!";
     }
 
     public AuthResponse login(LoginRequest loginRequest, HttpServletResponse response) {
@@ -95,6 +136,8 @@ public class AuthService {
             userDto.setUserId(user.getUserId());
             userDto.setUsername(user.getUsername());
             userDto.setEmail(user.getEmail());
+            userDto.setIsPasswordFirstChanged(user.getIsPasswordFirstChanged());
+            userDto.setIsAccountGranted(user.getIsAccountGranted());
             userDto.setRoles(user.getRoles().stream()
                     .map(Role::getRoleName)
                     .collect(Collectors.toSet()));

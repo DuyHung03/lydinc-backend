@@ -3,6 +3,7 @@ package com.duyhung.lydinc_backend.controller;
 import com.duyhung.lydinc_backend.model.auth.LoginRequest;
 import com.duyhung.lydinc_backend.model.auth.RegisterRequest;
 import com.duyhung.lydinc_backend.service.AuthService;
+import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,13 +18,18 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
     public final AuthService authService;
 
-    @PostMapping("/register")
-    public ResponseEntity<?> signIn(
+    //    @PostMapping("/register")
+//    public ResponseEntity<?> signIn(
+//            @RequestBody RegisterRequest registerRequest
+//    ) {
+//        return ResponseEntity.ok(authService.signIn(registerRequest));
+//    }
+    @PostMapping("/create-account")
+    public ResponseEntity<?> createAccount(
             @RequestBody RegisterRequest registerRequest
-    ) {
-        return ResponseEntity.ok(authService.signIn(registerRequest));
+    ) throws MessagingException {
+        return ResponseEntity.ok(authService.createAccount(registerRequest));
     }
-
 
     @PostMapping("/login")
     public ResponseEntity<?> login(

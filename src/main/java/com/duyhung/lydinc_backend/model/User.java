@@ -1,12 +1,10 @@
 package com.duyhung.lydinc_backend.model;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -32,12 +30,12 @@ public class User implements UserDetails {
     private String password;
     private String photoUrl;
     private String name;
-    private String gender;
-    private String birthday;
+    private Integer isPasswordFirstChanged;
+    private Integer isAccountGranted;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "school_id")
-    private School school;
+    @JoinColumn(name = "university_id")
+    private University university;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(

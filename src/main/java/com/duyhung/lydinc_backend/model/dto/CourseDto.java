@@ -21,5 +21,6 @@ public class CourseDto {
     private String lecturerName;
     private String lecturerEmail;
     private String lecturerPhoto;
-//    private List<EnrollmentDto> enrollments;
+    private String practiceLink;
+    private List<EnrollmentDto> enrollments;
 }

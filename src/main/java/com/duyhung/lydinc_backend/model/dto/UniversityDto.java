@@ -1,7 +1,6 @@
 package com.duyhung.lydinc_backend.model.dto;
 
 
-import com.duyhung.lydinc_backend.model.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,10 +12,13 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SchoolDto {
+public class UniversityDto {
 
-    private Integer schoolId;
-    private String schoolName;
+    private Integer universityId;
+    private String shortName;
+    private String fullName;
+    private String logo;
+    private String location;
     private List<UserDto> students;
 
 }
