@@ -1,12 +1,16 @@
 package com.duyhung.lydinc_backend.config;
 
+import com.duyhung.lydinc_backend.model.ErrorResponse;
 import com.duyhung.lydinc_backend.service.UserDetailsServiceImp;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -26,6 +30,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
+import static com.duyhung.lydinc_backend.config.RouteConfig.PUBLIC_ROUTES;
+
 @Configuration
 @RequiredArgsConstructor
 @EnableWebSecurity
@@ -33,27 +39,30 @@ public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
     private final UserDetailsServiceImp userDetailsServiceImp;
+    private final RouteConfig routeConfig;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
-                .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/auth/**", "/drive/**").permitAll()
-                        .requestMatchers("/enrollments/**").hasAnyAuthority("LECTURER", "STUDENT")
-                        .requestMatchers(HttpMethod.POST, "/courses/**").hasAnyAuthority("LECTURER")
-                        .requestMatchers(HttpMethod.GET, "/courses/**").hasAnyAuthority("LECTURER", "STUDENT")
-                        .requestMatchers(HttpMethod.POST, "/school/**").hasAnyAuthority("LECTURER", "ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/school/**").hasAnyAuthority("LECTURER", "STUDENT")
-                        .requestMatchers(HttpMethod.GET, "/user/**").hasAnyAuthority("LECTURER", "ADMIN")
-                        .anyRequest().authenticated()
-                )
+                .authorizeHttpRequests(auth -> {
+                    PUBLIC_ROUTES.forEach(route -> auth.requestMatchers(route).permitAll());
+
+                    auth.requestMatchers("/enrollments/**").hasAnyAuthority("LECTURER", "STUDENT")
+                            .requestMatchers(HttpMethod.POST, "/courses/**").hasAnyAuthority("LECTURER")
+                            .requestMatchers(HttpMethod.GET, "/courses/**").hasAnyAuthority("LECTURER", "STUDENT")
+                            .requestMatchers(HttpMethod.POST, "/school/**").hasAnyAuthority("LECTURER", "ADMIN")
+                            .requestMatchers(HttpMethod.GET, "/school/**").hasAnyAuthority("LECTURER", "STUDENT")
+                            .requestMatchers(HttpMethod.GET, "/user/**").hasAnyAuthority("LECTURER", "ADMIN")
+                            .requestMatchers(HttpMethod.POST, "/user/**").hasAnyAuthority("LECTURER", "ADMIN", "STUDENT")
+                            .requestMatchers(HttpMethod.POST, "/admin/**").hasAnyAuthority("ADMIN")
+                            .anyRequest().authenticated();
+                })
                 .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return httpSecurity.build();
     }
-
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
@@ -62,7 +71,7 @@ public class SecurityConfig {
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Allowed HTTP methods
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type")); // Allowed headers
         configuration.setExposedHeaders(List.of("Authorization")); // Headers exposed to clients
-        configuration.setAllowCredentials(true); // Allow credentials (e.g., cookies)
+        configuration.setAllowCredentials(true); // Allow cookies
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration); // Apply CORS to all endpoints

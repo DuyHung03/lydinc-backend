@@ -25,4 +25,28 @@ public class EmailService {
 
         mailSender.send(message);
     }
+
+    public void sendEmailChangePassword(String to, String username) throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+
+        message.setFrom(new InternetAddress("vkksieunhan2003@gmail.com"));
+        message.setRecipients(MimeMessage.RecipientType.TO, to);
+        message.setSubject("QA Learning Account");
+
+        String htmlContent = "<div style=\"font-family: Arial, sans-serif; line-height: 1.6; color: #333; border: 2px solid #b39858; border-radius: 10px; padding: 20px; max-width: 600px; margin: 0 auto;\">\n" +
+                "    <p style=\"text-align: center; font-size: 20px; font-weight: bold; color: #2196f3;\">\n" +
+                "        <span style=\"color: #2dc26b;\">Change Password Notification - QA Learning Website</span>\n" +
+                "    </p>\n" +
+                "    <p>Dear <strong>" + to + "</strong>,</p>\n" +
+                "    <p>We are notifying you of an update to your login account details in the <strong>QA Learning System</strong> for account:</p>\n" +
+                "  <strong> " + username + " </strong>\n" +
+                "    <p><strong style=\"color: #e03e2d;\">If you did not request this change, please contact us immediately to secure your account.</strong></p>\n" +
+                "    <p>Best regards,</p>\n" +
+                "    <p style=\"font-weight: bold;\">QA Learning Website Team</p>\n" +
+                "</div>\n";
+        message.setContent(htmlContent, "text/html; charset=utf-8");
+
+        mailSender.send(message);
+    }
+
 }

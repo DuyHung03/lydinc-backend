@@ -3,32 +3,27 @@ package com.duyhung.lydinc_backend.exception;
 import com.duyhung.lydinc_backend.model.ErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-@ControllerAdvice
+@RestControllerAdvice
 public class GlobalExceptionHandler {
 
     //authenticate validation
     @ExceptionHandler(AuthValidationException.class)
     public ResponseEntity<?> handleAuthValidationException(AuthValidationException ex) {
-        ErrorResponse errorResponse = new ErrorResponse(
-                HttpStatus.BAD_REQUEST.value(),
-                HttpStatus.BAD_REQUEST.getReasonPhrase(),
-                ex.getMessage()
-        );
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        return ResponseEntity.status(407).body(ex.getMessage());
     }
 
     // token validation
     @ExceptionHandler(JwtValidationException.class)
-    public ResponseEntity<?> handleGenericException(Exception ex) {
+    public ResponseEntity<?> handleGenericException(JwtValidationException ex) {
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.UNAUTHORIZED.value(),
                 HttpStatus.UNAUTHORIZED.getReasonPhrase(),
                 ex.getMessage()
         );
-        return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+        return ResponseEntity.status(401).body(errorResponse);
     }
 
 

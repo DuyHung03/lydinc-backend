@@ -15,5 +15,4 @@ public interface CourseRepository extends JpaRepository<Course, Integer> {
 
     Optional<List<Course>> findByLecturerId(String teacherId);
 
-
 }

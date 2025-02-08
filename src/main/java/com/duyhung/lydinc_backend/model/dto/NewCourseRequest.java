@@ -1,5 +1,6 @@
-package com.duyhung.lydinc_backend.model;
+package com.duyhung.lydinc_backend.model.dto;
 
+import com.duyhung.lydinc_backend.model.dto.ModuleDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,7 +15,5 @@ import java.util.List;
 public class NewCourseRequest {
     private String title;
     private String lecturerId;
-    private List<String> userIds;
-
-
+    private List<ModuleDto> modules;
 }

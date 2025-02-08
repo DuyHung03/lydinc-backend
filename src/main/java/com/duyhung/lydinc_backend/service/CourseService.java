@@ -2,18 +2,17 @@ package com.duyhung.lydinc_backend.service;
 
 import com.duyhung.lydinc_backend.model.Course;
 import com.duyhung.lydinc_backend.model.Enrollment;
+import com.duyhung.lydinc_backend.model.Module;
 import com.duyhung.lydinc_backend.model.User;
-import com.duyhung.lydinc_backend.model.dto.CourseDto;
-import com.duyhung.lydinc_backend.model.dto.EnrollmentDto;
-import com.duyhung.lydinc_backend.model.dto.UniversityDto;
-import com.duyhung.lydinc_backend.model.dto.UserDto;
+import com.duyhung.lydinc_backend.model.dto.*;
 import com.duyhung.lydinc_backend.repository.CourseRepository;
 import com.duyhung.lydinc_backend.repository.EnrollmentRepository;
+import com.duyhung.lydinc_backend.repository.ModuleRepository;
 import com.duyhung.lydinc_backend.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,17 +25,38 @@ public class CourseService {
     private final UserRepository userRepository;
     private final EnrollmentService enrollmentService;
     private final EnrollmentRepository enrollmentRepository;
+    private final ModuleRepository moduleRepository;
 
-    public String createNewCourse(String title, String lecturerId, List<String> userIds) {
-        User lecturer = userRepository.findById(lecturerId).orElseThrow(() -> new RuntimeException("Lecturer not found"));
+    @Transactional
+    public Integer createNewCourse(String title, List<ModuleDto> modules, String lecturerId) {
 
-        Course newCourse = courseRepository.save(Course.builder().title(title).enrollmentDate(LocalDate.now()).lecturerId(lecturerId).lecturerName(lecturer.getName()).lecturerEmail(lecturer.getEmail()).build());
+        try {
+            // Save the course
+            Course course = courseRepository.save(
+                    Course.builder()
+                            .title(title)
+                            .lecturerId(lecturerId)
+                            .build()
+            );
 
-        if (userIds != null && !userIds.isEmpty()) {
-            enrollmentService.assignUsersToCourse(userIds, newCourse.getCourseId());
+            // Save all modules
+            modules.forEach(module ->
+                    moduleRepository.save(Module.builder()
+                            .moduleId(module.getModuleId())
+                            .moduleTitle(module.getModuleTitle())
+                            .level(module.getLevel())
+                            .index(module.getIndex())
+                            .parentModuleId(module.getParentModuleId())
+                            .course(course)
+                            .build())
+            );
+
+            // Return the course ID
+            return course.getCourseId();
+        } catch (Exception e) {
+            // Log the error and rethrow or return a meaningful error message
+            throw new RuntimeException("Failed to create course: " + e.getMessage(), e);
         }
-
-        return "Create a new course successfully";
     }
 
     public List<CourseDto> getCourseByLecturer(String lecturerId) {
@@ -52,6 +72,8 @@ public class CourseService {
 
         return enrollments.stream().map(this::mapToCourseDto).collect(Collectors.toList());
     }
+
+    //
 
     private CourseDto mapToCourseDto(Enrollment enrollment) {
         return CourseDto.builder().courseId(enrollment.getCourse().getCourseId()).title(enrollment.getCourse().getTitle()).status(enrollment.getCourse().getStatus()).enrollmentDate(enrollment.getEnrollmentDate()).lecturerId(enrollment.getCourse().getLecturerId()).lecturerEmail(enrollment.getCourse().getLecturerEmail()).lecturerName(enrollment.getCourse().getLecturerName()).lecturerPhoto(enrollment.getCourse().getLecturerPhoto()).build();

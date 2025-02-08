@@ -4,6 +4,7 @@ import com.duyhung.lydinc_backend.model.auth.LoginRequest;
 import com.duyhung.lydinc_backend.model.auth.RegisterRequest;
 import com.duyhung.lydinc_backend.service.AuthService;
 import jakarta.mail.MessagingException;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -24,12 +25,6 @@ public class AuthController {
 //    ) {
 //        return ResponseEntity.ok(authService.signIn(registerRequest));
 //    }
-    @PostMapping("/create-account")
-    public ResponseEntity<?> createAccount(
-            @RequestBody RegisterRequest registerRequest
-    ) throws MessagingException {
-        return ResponseEntity.ok(authService.createAccount(registerRequest));
-    }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(
@@ -37,5 +32,13 @@ public class AuthController {
             HttpServletResponse response
     ) {
         return ResponseEntity.ok(authService.login(authRequest, response));
+    }
+
+    @PostMapping("/refreshToken")
+    public ResponseEntity<?> refreshToken(
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) {
+        return ResponseEntity.ok(authService.refreshToken(request, response));
     }
 }
