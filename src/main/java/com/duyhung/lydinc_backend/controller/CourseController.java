@@ -21,7 +21,7 @@ public class CourseController {
 
     @PostMapping("/edit-privacy")
     public ResponseEntity<?> editPrivacy(@RequestBody EditPrivacyRequest request) {
-        courseService.editCoursePrivacy(request.getPrivacy(), request.getCourseId(), request.getUniversityIds(), null);
+        courseService.editCoursePrivacy(request.getPrivacy(), request.getCourseId(), request.getUniversityIds(), request.getDeleteUniversityIds());
         return ResponseEntity.ok("Privacy settings updated successfully.");
     }
 

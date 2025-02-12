@@ -7,6 +7,8 @@ import com.duyhung.lydinc_backend.repository.EnrollmentRepository;
 import com.duyhung.lydinc_backend.repository.UniversityRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,12 +17,23 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class EnrollmentService {
-
+    private static final Logger logger = LoggerFactory.getLogger(EnrollmentService.class);
     private final EnrollmentRepository enrollmentRepository;
     private final UniversityRepository universityRepository;
 
     @Transactional
-    public void assignUniversityToCourse(List<Integer> universityIds, Course course) {
+    public void assignUniversityToCourse(
+            List<Integer> universityIds,
+            List<Integer> deleteUniversityIds,
+            Course course
+    ) {
+        deleteUniversityIds.forEach(id -> {
+            Integer findEnrollmentId = enrollmentRepository.findEnrollmentExists(course.getCourseId(), id);
+            if (findEnrollmentId != null) {
+                enrollmentRepository.deleteByEnrollmentId(findEnrollmentId);
+            }
+        });
+
         universityIds.forEach(id -> {
             Integer findEnrollmentId = enrollmentRepository.findEnrollmentExists(course.getCourseId(), id);
             if (findEnrollmentId != null) {
@@ -28,7 +41,7 @@ public class EnrollmentService {
             }
             University university = universityRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("University not found with ID: " + id));
-            enrollmentRepository.save(Enrollment.builder().university(university).course(course).status(1).build());
+            enrollmentRepository.save(Enrollment.builder().university(university).course(course).build());
         });
     }
 

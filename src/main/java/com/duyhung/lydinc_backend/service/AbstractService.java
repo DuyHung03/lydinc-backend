@@ -20,7 +20,7 @@ public abstract class AbstractService {
     }
 
     public EnrollmentDto mapEnrollmentToDto(Enrollment enrollment) {
-        return EnrollmentDto.builder().enrollmentId(enrollment.getEnrollmentId()).enrollmentDate(enrollment.getEnrollmentDate()).status(enrollment.getStatus()).university(mapToUniversityDto(enrollment.getUniversity()))
+        return EnrollmentDto.builder().enrollmentId(enrollment.getEnrollmentId()).enrollmentDate(enrollment.getEnrollmentDate()).university(mapToUniversityDto(enrollment.getUniversity()))
                 .build();
     }
 

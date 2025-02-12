@@ -28,6 +28,4 @@ public class Enrollment {
     private Course course;
 
     private LocalDate enrollmentDate;
-    private Integer status;
-
 }

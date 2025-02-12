@@ -16,7 +16,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -101,20 +100,23 @@ public class CourseService extends AbstractService {
     }
 
     @Transactional
-    public void editCoursePrivacy(String privacy, Integer courseId, List<Integer> universityIds,
-                                  @Nullable Course course) {
+    public void editCoursePrivacy(
+            String privacy,
+            Integer courseId,
+            List<Integer> universityIds,
+            List<Integer> deleteUniversityIds
+    ) {
         // Use the provided course if available; otherwise, fetch from DB
-        Course targetCourse = (course != null) ? course :
-                courseRepository.findById(courseId).orElseThrow(() -> {
-                    logger.warn("No course found with ID {}", courseId);
-                    return new RuntimeException("Course not found");
-                });
+        Course targetCourse = courseRepository.findById(courseId).orElseThrow(() -> {
+            logger.warn("No course found with ID {}", courseId);
+            return new RuntimeException("Course not found");
+        });
 
         targetCourse.setPrivacy(privacy);
         courseRepository.save(targetCourse);
 
         if (!"public".equals(privacy)) {
-            enrollmentService.assignUniversityToCourse(universityIds, targetCourse);
+            enrollmentService.assignUniversityToCourse(universityIds, deleteUniversityIds, targetCourse);
         }
 
         logger.info("Privacy settings updated for course '{}'", targetCourse.getCourseId());
@@ -139,7 +141,7 @@ public class CourseService extends AbstractService {
         String privacy = (String) result.get(0)[1];
         List<Integer> universityIds = result.stream()
                 .map(row -> (Integer) row[2])
-                .filter(Objects::nonNull)  // Remove null values
+                .filter(Objects::nonNull)
                 .toList();
 
         logger.info("Fetched courseId: {}, privacy: {}, universityIds: {}",

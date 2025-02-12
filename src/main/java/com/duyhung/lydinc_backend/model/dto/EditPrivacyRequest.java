@@ -15,5 +15,6 @@ public class EditPrivacyRequest {
     private String privacy;
     private Integer courseId;
     private List<Integer> universityIds;
+    private List<Integer> deleteUniversityIds;
 }
 
