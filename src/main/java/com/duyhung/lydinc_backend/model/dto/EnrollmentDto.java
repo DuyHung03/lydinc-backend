@@ -14,6 +14,6 @@ import java.time.LocalDate;
 public class EnrollmentDto {
     private Integer enrollmentId;
     private LocalDate enrollmentDate;
-    private String status;
-    private UserDto user;
+    private Integer status;
+    private UniversityDto university;
 }

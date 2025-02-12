@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class UniversityService {
+public class UniversityService extends AbstractService {
 
     private final UniversityRepository universityRepository;
     private final CourseService courseService;
@@ -32,22 +32,16 @@ public class UniversityService {
     public List<UniversityDto> getAllUniversities() {
         List<University> universities = universityRepository.findAll();
 
-        return universities.stream().map(university -> UniversityDto.builder()
-                        .universityId(university.getUniversityId())
-                        .shortName(university.getShortName())
-                        .fullName(university.getFullName())
-                        .logo(university.getLogo())
-                        .location(university.getLocation())
-                        .students(university.getStudents().stream().map(courseService::mapUserToDto)
-                                .collect(Collectors.toList())).build())
+        return universities.stream().map(this::mapToUniversityDto)
                 .collect(Collectors.toList());
+
     }
 
     public List<UserDto> getStudentsOfUniversity(Integer universityId) {
         List<User> users = userRepository.findByUniversityUniversityId(universityId)
                 .orElseThrow(() -> new RuntimeException("University Not Found"));
 
-        return users.stream().map(courseService::mapUserToDto).collect(Collectors.toList());
+        return users.stream().map(this::mapUserToDto).collect(Collectors.toList());
     }
 
 }

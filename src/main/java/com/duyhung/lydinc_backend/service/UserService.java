@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class UserService {
+public class UserService extends AbstractService {
 
     private final UserRepository userRepository;
     private final CourseService courseService;
@@ -29,7 +29,7 @@ public class UserService {
         Pageable pageable = PageRequest.of(pageNo, pageSize);
         Page<User> userPage = userRepository.findAllExceptCurrent(adminId, pageable);
         List<User> userList = userPage.getContent();
-        List<UserDto> users = userList.stream().map(courseService::mapUserToDto).toList();
+        List<UserDto> users = userList.stream().map(this::mapUserToDto).toList();
         return UserListResponse.builder().users(users).total(userPage.getTotalPages()).pageNo(pageNo + 1).pageSize(pageSize).build();
     }
 

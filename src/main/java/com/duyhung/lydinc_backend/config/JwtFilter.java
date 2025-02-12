@@ -29,8 +29,7 @@ public class JwtFilter extends OncePerRequestFilter {
     private final RouteConfig routeConfig;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String requestURI = request.getRequestURI();
 
         // Skip token validation for public routes
@@ -52,11 +51,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
                 if (username != null && jwtService.verifyToken(accessToken)) {
                     User userDetails = (User) userDetailsService.loadUserByUsername(username);
-                    UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            null,
-                            userDetails.getAuthorities()
-                    );
+                    UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                     authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authenticationToken);
                 } else {
@@ -69,12 +64,7 @@ public class JwtFilter extends OncePerRequestFilter {
             // Handle the exception and send a 401 response
             response.setStatus(HttpStatus.UNAUTHORIZED.value());
             response.setContentType("application/json");
-            response.getWriter().write(
-                    String.format("{\"status\": %d, \"error\": \"%s\", \"message\": \"%s\"}",
-                            HttpStatus.UNAUTHORIZED.value(),
-                            HttpStatus.UNAUTHORIZED.getReasonPhrase(),
-                            ex.getMessage())
-            );
+            response.getWriter().write(ex.getMessage());
         }
     }
 }

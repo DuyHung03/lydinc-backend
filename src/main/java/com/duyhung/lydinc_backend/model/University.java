@@ -26,4 +26,5 @@ public class University {
 
     @OneToMany(mappedBy = "university", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<User> students;
+
 }

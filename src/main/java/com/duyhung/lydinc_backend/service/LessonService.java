@@ -13,7 +13,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class LessonService {
+public class LessonService extends AbstractService {
     private final LessonRepository lessonRepository;
     private final ModuleRepository moduleRepository;
 
@@ -47,21 +47,6 @@ public class LessonService {
                 .module(module)
                 .build();
         return lessonRepository.save(newLesson);
-    }
-
-    private LessonDto mapToLessonDto(Lesson lesson, Module module) {
-        return LessonDto.builder()
-                .lessonId(lesson.getLessonId())
-                .lessonTitle(lesson.getLessonTitle())
-                .lessonContent(lesson.getLessonContent())
-                .module(ModuleDto.builder()
-                        .moduleId(module.getModuleId())
-                        .level(module.getLevel())
-                        .index(module.getIndex())
-                        .parentModuleId(module.getParentModuleId())
-                        .status(module.getStatus())
-                        .build())
-                .build();
     }
 
 

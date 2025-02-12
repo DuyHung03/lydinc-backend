@@ -9,10 +9,15 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<?> handleRuntimeException(RuntimeException ex) {
+        return ResponseEntity.status(400).body(ex.getMessage());
+    }
+
     //authenticate validation
     @ExceptionHandler(AuthValidationException.class)
     public ResponseEntity<?> handleAuthValidationException(AuthValidationException ex) {
-        return ResponseEntity.status(407).body(ex.getMessage());
+        return ResponseEntity.status(403).body(ex.getMessage());
     }
 
     // token validation

@@ -17,6 +17,7 @@ public class CourseDto {
     private String title;
     private LocalDate enrollmentDate;
     private String status;
+    private String privacy;
     private String lecturerId;
     private String lecturerName;
     private String lecturerEmail;

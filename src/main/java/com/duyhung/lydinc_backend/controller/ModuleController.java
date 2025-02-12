@@ -1,12 +1,12 @@
 package com.duyhung.lydinc_backend.controller;
 
+import com.duyhung.lydinc_backend.model.dto.UpdateModuleRequest;
 import com.duyhung.lydinc_backend.service.ModuleService;
 import lombok.RequiredArgsConstructor;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -20,6 +20,13 @@ public class ModuleController {
             @RequestParam Integer courseId
     ) {
         return ResponseEntity.ok(moduleService.getModulesByCourse(courseId));
+    }
+
+    @PutMapping("update-course")
+    public ResponseEntity<?> updateModuleByCourseId(
+            @RequestBody UpdateModuleRequest request
+    ) {
+        return ResponseEntity.ok(moduleService.updateModulesTitle(request));
     }
 
 }

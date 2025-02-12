@@ -19,6 +19,6 @@ public class UniversityDto {
     private String fullName;
     private String logo;
     private String location;
-    private List<UserDto> students;
+    private int studentCount;
 
 }

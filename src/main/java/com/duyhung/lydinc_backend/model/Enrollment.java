@@ -1,6 +1,5 @@
 package com.duyhung.lydinc_backend.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,14 +20,14 @@ public class Enrollment {
     private Integer enrollmentId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "university_id", nullable = false)
+    private University university;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "course_id", nullable = false)
     private Course course;
 
     private LocalDate enrollmentDate;
-    private String status;
+    private Integer status;
 
 }

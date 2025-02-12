@@ -28,7 +28,7 @@ public class Module {
     @JoinColumn(name = "course_id", nullable = false)
     private Course course;
 
-    @OneToMany(mappedBy = "module", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    @OneToMany(mappedBy = "module", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<Lesson> lessons;
 
 }

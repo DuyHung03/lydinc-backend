@@ -17,6 +17,8 @@ import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -37,6 +39,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AuthService extends AbstractService {
 
+    private static final Logger logger = LogManager.getLogger(AuthService.class);
+
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
@@ -49,57 +53,29 @@ public class AuthService extends AbstractService {
     private final JwtService jwtService;
     private final CourseService courseService;
 
-
     @Value("${jwt.accessToken-expiration}")
     private int ACCESS_TOKEN_EXPIRY_DATE;
 
     @Value("${jwt.refreshToken-expiration}")
     private int REFRESH_TOKEN_EXPIRY_DATE;
 
-//    public String signIn(RegisterRequest request, Integer ) {
-//        Optional<User> existingUser = userRepository.findByUsername(request.getUsername());
-//        if (existingUser.isPresent()) {
-//            return "Username is already taken.";
-//        }
-//
-//        University university = universityRepository.findById(request.getUniversityId())
-//                .orElseThrow(() -> new RuntimeException("University not found"));
-//
-//        User user = User.builder()
-//                .username(request.getUsername())
-//                .email(request.getEmail())
-//                .phone(request.getPhone())
-//                .password(passwordEncoder.encode(request.getPassword()))
-//                .name(request.getName())
-//                .isPasswordFirstChanged(0)
-//                .isAccountGranted(1)
-//                .university(university)
-//                .roles(new HashSet<>())
-//                .build();
-//
-//        Role userRole = roleRepository.findByRoleId(1);
-//        user.getRoles().add(userRole);
-//
-//        userRepository.save(user);
-//
-//        return "User registered successfully!";
-//    }
-
     public String createAccount(List<RegisterRequest> requests) {
-        requests.forEach(request ->
-        {
+        requests.forEach(request -> {
+            logger.info("Creating account for username: {}", request.getUsername());
 
             Optional<User> existingUser = userRepository.findByUsername(request.getUsername());
             if (existingUser.isPresent()) {
-                throw new RuntimeException("User" + request.getUsername() + "already exist!");
+                logger.error("User {} already exists", request.getUsername());
+                throw new RuntimeException("User " + request.getUsername() + " already exist!");
             }
 
             University university = universityRepository.findById(request.getUniversityId())
-                    .orElseThrow(() -> new RuntimeException("University not found"));
+                    .orElseThrow(() -> {
+                        logger.error("University with ID {} not found", request.getUniversityId());
+                        return new RuntimeException("University not found");
+                    });
 
-            String password = request.getPassword() == null
-                    ? generateRandomPassword()
-                    : request.getPassword();
+            String password = request.getPassword() == null ? generateRandomPassword() : request.getPassword();
 
             User user = User.builder()
                     .username(request.getUsername())
@@ -117,38 +93,32 @@ public class AuthService extends AbstractService {
             user.getRoles().add(userRole);
 
             userRepository.save(user);
+            logger.info("User {} registered successfully", request.getUsername());
+
             try {
-                emailService.sendEmailAccountGranted(
-                        request.getEmail(),
-                        request.getUsername(),
-                        password
-                );
+                emailService.sendEmailAccountGranted(request.getEmail(), request.getUsername(), password);
+                logger.info("Account creation email sent to {}", request.getEmail());
             } catch (MessagingException e) {
+                logger.error("Error sending email to {}: {}", request.getEmail(), e.getMessage(), e);
                 throw new RuntimeException(e);
             }
-
         });
         return "Create account and send email successfully!";
     }
 
     public AuthResponse login(LoginRequest loginRequest, HttpServletResponse response) {
         try {
-            // Authenticate user credentials
+            logger.info("Attempting login for username: {}", loginRequest.getUsername());
+
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
-                            loginRequest.getUsername(),
-                            loginRequest.getPassword()
-                    )
-            );
+                            loginRequest.getUsername(), loginRequest.getPassword()
+                    ));
 
-            // Extract user details from authentication object
             User user = (User) authentication.getPrincipal();
-
-            // Generate tokens
             String accessToken = jwtUtils.generateAccessToken(user.getUsername());
             String refreshToken = jwtUtils.generateRefreshToken(user.getUsername());
 
-            // Set cookies for tokens
             cookieUtils.setCookie("accessToken", accessToken, ACCESS_TOKEN_EXPIRY_DATE / 1000, response);
             cookieUtils.setCookie("refreshToken", refreshToken, REFRESH_TOKEN_EXPIRY_DATE / 1000, response);
 
@@ -157,33 +127,37 @@ public class AuthService extends AbstractService {
             userDto.setUsername(user.getUsername());
             userDto.setIsPasswordFirstChanged(user.getIsPasswordFirstChanged());
             userDto.setIsAccountGranted(user.getIsAccountGranted());
-            userDto.setRoles(user.getRoles().stream()
-                    .map(Role::getRoleName)
-                    .collect(Collectors.toSet()));
+            userDto.setRoles(user.getRoles().stream().map(Role::getRoleName).collect(Collectors.toSet()));
 
-            // Build response
+            logger.info("User {} logged in successfully", user.getUsername());
+
             AuthResponse authResponse = new AuthResponse();
             authResponse.setCode(HttpStatus.OK.value());
             authResponse.setUser(userDto);
             return authResponse;
 
         } catch (BadCredentialsException e) {
+            logger.error("Invalid login attempt for username: {}", loginRequest.getUsername());
             throw new AuthValidationException("Invalid username or password");
         }
     }
 
-
     public String refreshToken(HttpServletRequest request, HttpServletResponse response) {
         try {
+            logger.info("Attempting to refresh token");
             String refreshToken = cookieUtils.getCookie(request, "refreshToken");
             if (refreshToken == null || !jwtService.verifyToken(refreshToken)) {
+                logger.error("Invalid or missing refresh token");
                 throw new JwtValidationException("Unauthorized");
             }
+
             String newAccessToken = jwtService.generateAccessToken(jwtService.getUsername(refreshToken));
             cookieUtils.setCookie("accessToken", newAccessToken, 86400, response);
 
+            logger.info("Token refreshed successfully");
             return "Refresh token successfully!";
-        } catch (Exception e) {
+        } catch (JwtValidationException e) {
+            logger.error("Token refresh failed: {}", e.getMessage());
             throw new RuntimeException(e.getMessage());
         }
     }
@@ -195,8 +169,7 @@ public class AuthService extends AbstractService {
         for (int i = 0; i < 12; i++) {
             password.append(chars.charAt(random.nextInt(chars.length())));
         }
+        logger.debug("Generated random password");
         return password.toString();
     }
-
-
 }
