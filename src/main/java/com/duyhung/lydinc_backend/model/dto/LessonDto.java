@@ -4,16 +4,16 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 public class LessonDto {
-
     private String lessonId;
-    private String lessonTitle;
-    private String lessonContent;
-    private ModuleDto module;
-
+    private Integer index;
+    private Integer type;
+    private String url;
+    private String text;
 }

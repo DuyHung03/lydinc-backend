@@ -7,12 +7,15 @@ import com.duyhung.lydinc_backend.model.dto.UserListResponse;
 import com.duyhung.lydinc_backend.repository.UserRepository;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,6 +27,7 @@ public class UserService extends AbstractService {
     private final CourseService courseService;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private static final Logger logger = LogManager.getLogger(ModuleService.class);
 
     public UserListResponse getAllAccounts(String adminId, int pageNo, int pageSize) {
         Pageable pageable = PageRequest.of(pageNo, pageSize);
@@ -67,6 +71,23 @@ public class UserService extends AbstractService {
         emailService.sendEmailChangePassword(user.getEmail(), user.getUsername());
 
         return "Password changed successfully!";
+    }
+
+    public List<UserDto> getAllStudents() {
+        try {
+            logger.info("Fetching all students from database");
+            List<User> users = userRepository.findAllStudent();
+            logger.info("Found {} students", users.size());
+
+            return users.stream().map(user -> UserDto.builder()
+                    .userId(user.getUserId())
+                    .username(user.getUsername())
+                    .email(user.getEmail())
+                    .build()).collect(Collectors.toList());
+        } catch (Exception e) {
+            logger.error("Error occurred while fetching students: {}", e.getMessage(), e);
+            throw new RuntimeException("Error occurred while fetching users");
+        }
     }
 
 

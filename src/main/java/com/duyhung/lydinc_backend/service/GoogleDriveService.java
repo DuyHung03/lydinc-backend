@@ -1,7 +1,9 @@
 package com.duyhung.lydinc_backend.service;
 
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.http.FileContent;
 import com.google.api.client.http.HttpRequestInitializer;
+import com.google.api.client.http.InputStreamContent;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.drive.Drive;
@@ -12,9 +14,11 @@ import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
@@ -84,19 +88,29 @@ public class GoogleDriveService {
         return result.getFiles().get(0); // Return the file
     }
 
+    public String uploadFileAndReturnUrl(MultipartFile multipartFile) throws IOException, GeneralSecurityException {
+        Drive driveService = createDriveService();
+        String folderId = "10PaudcvfvSCvNHziQSFXCb1_hz1yervz"; // Your Google Drive folder ID
 
-    // Map files for each username folder
-//    public Map<String, List<File>> getFilesFromUsernameFolders(String username) throws IOException, GeneralSecurityException {
-//        List<File> subfolders = getUserFolders();
-//        Map<String, List<File>> filesBySubfolder = new HashMap<>();
-//
-//        for (File subfolder : subfolders) {
-//            List<File> filesInSubfolder = getFilesInFolder(subfolder.getId(), username);
-//            if (!filesInSubfolder.isEmpty()) {
-//                filesBySubfolder.put(subfolder.getName(), filesInSubfolder);
-//            }
-//        }
-//
-//        return filesBySubfolder;
-//    }
+        // Prepare file metadata
+        File fileMetadata = new File();
+        fileMetadata.setName(multipartFile.getOriginalFilename());
+        fileMetadata.setParents(Collections.singletonList(folderId));
+
+        // Use InputStreamContent for uploading directly from MultipartFile
+        try (InputStream inputStream = multipartFile.getInputStream()) {
+            InputStreamContent mediaContent = new InputStreamContent(multipartFile.getContentType(), inputStream);
+
+            // Upload to Google Drive
+            File uploadedFile = driveService.files().create(fileMetadata, mediaContent)
+                    .setFields("id")
+                    .execute();
+
+            // Construct and return direct image view URL
+            String fileId = uploadedFile.getId();
+            return "https://lh3.googleusercontent.com/d/" + fileId;
+        }
+    }
+
+
 }

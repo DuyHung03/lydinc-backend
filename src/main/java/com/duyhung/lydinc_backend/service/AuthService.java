@@ -32,7 +32,6 @@ import org.springframework.stereotype.Service;
 import java.security.SecureRandom;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -63,8 +62,8 @@ public class AuthService extends AbstractService {
         requests.forEach(request -> {
             logger.info("Creating account for username: {}", request.getUsername());
 
-            Optional<User> existingUser = userRepository.findByUsername(request.getUsername());
-            if (existingUser.isPresent()) {
+            String existingUser = userRepository.checkUserExist(request.getUsername());
+            if (existingUser != null) {
                 logger.error("User {} already exists", request.getUsername());
                 throw new RuntimeException("User " + request.getUsername() + " already exist!");
             }
@@ -172,4 +171,38 @@ public class AuthService extends AbstractService {
         logger.debug("Generated random password");
         return password.toString();
     }
+
+    public String register(
+            String username,
+            String fullName,
+            String password,
+            String email,
+            String phone
+    ) {
+        String existingUser = userRepository.checkUserExist(username);
+        if (existingUser != null) {
+            logger.error("User {} already exists", username);
+            throw new RuntimeException("User " + username + " already exist!");
+        }
+        User user = User.builder()
+                .username(username)
+                .email(email)
+                .phone(phone)
+                .password(passwordEncoder.encode(password))
+                .name(fullName)
+                .isPasswordFirstChanged(0)
+                .isAccountGranted(0)
+                .roles(new HashSet<>())
+                .build();
+
+        Role userRole = roleRepository.findByRoleId(1);
+        user.getRoles().add(userRole);
+
+        userRepository.save(user);
+        logger.info("User {} registered successfully", username);
+
+        return "Create account successfully!";
+
+    }
+
 }

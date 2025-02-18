@@ -1,9 +1,12 @@
 package com.duyhung.lydinc_backend.controller;
 
+import com.duyhung.lydinc_backend.model.dto.LessonDto;
 import com.duyhung.lydinc_backend.service.LessonService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -13,18 +16,15 @@ public class LessonController {
     private final LessonService lessonService;
 
     @PostMapping("update-data")
-    public ResponseEntity<?> updateLessonData(@RequestBody String data, @RequestParam String moduleId) {
-
-        return ResponseEntity.ok(lessonService.updateLessonData(data, moduleId));
-
+    public ResponseEntity<?> updateLessonData(
+            @RequestBody List<LessonDto> lessons,
+            @RequestParam String moduleId
+    ) {
+        return ResponseEntity.ok(lessonService.updateLessonData(lessons, moduleId));
     }
 
-    @GetMapping("get-data")
+    @GetMapping("get-lesson-data")
     public ResponseEntity<?> getLessonData(@RequestParam String moduleId) {
-
         return ResponseEntity.ok(lessonService.getLessonData(moduleId));
-
     }
-
-
 }

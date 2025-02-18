@@ -34,7 +34,7 @@ public class User implements UserDetails {
     private Integer isAccountGranted;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "university_id")
+    @JoinColumn(name = "university_id", nullable = true)
     private University university;
 
     @ManyToMany(fetch = FetchType.EAGER)

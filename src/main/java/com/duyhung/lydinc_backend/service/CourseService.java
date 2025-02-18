@@ -104,9 +104,9 @@ public class CourseService extends AbstractService {
             String privacy,
             Integer courseId,
             List<Integer> universityIds,
-            List<Integer> deleteUniversityIds
+            List<Integer> deleteUniversityIds,
+            List<String> userIds
     ) {
-        // Use the provided course if available; otherwise, fetch from DB
         Course targetCourse = courseRepository.findById(courseId).orElseThrow(() -> {
             logger.warn("No course found with ID {}", courseId);
             return new RuntimeException("Course not found");
@@ -116,7 +116,7 @@ public class CourseService extends AbstractService {
         courseRepository.save(targetCourse);
 
         if (!"public".equals(privacy)) {
-            enrollmentService.assignUniversityToCourse(universityIds, deleteUniversityIds, targetCourse);
+            enrollmentService.assignUniversityToCourse(universityIds, deleteUniversityIds, targetCourse, userIds);
         }
 
         logger.info("Privacy settings updated for course '{}'", targetCourse.getCourseId());
@@ -124,31 +124,45 @@ public class CourseService extends AbstractService {
 
 
     public CoursePrivacy getCoursePrivacy(Integer courseId) {
-        logger.info("Fetching courseId, privacy, and universityIds for courseId: {}", courseId);
+        logger.info("Fetching course privacy data for courseId: {}", courseId);
 
-        List<Object[]> result = courseRepository.findCoursePrivacy(courseId);
+        List<Object[]> universityRecords = courseRepository.findCoursePrivacyUniversity(courseId);
+        List<Object[]> userRecords = courseRepository.findCoursePrivacyUser(courseId);
 
-        if (result.isEmpty()) {
+        if (universityRecords.isEmpty() && userRecords.isEmpty()) {
             logger.error("No data found for courseId: {}", courseId);
             return CoursePrivacy.builder()
                     .courseId(courseId)
                     .privacy("public")
                     .universityIds(Collections.emptyList())
+                    .userIds(Collections.emptyList())
                     .build();
         }
 
-        Integer fetchedCourseId = (Integer) result.get(0)[0];
-        String privacy = (String) result.get(0)[1];
-        List<Integer> universityIds = result.stream()
+        String privacy;
+        if (!universityRecords.isEmpty()) {
+            privacy = (String) universityRecords.get(0)[1];
+        } else {
+            privacy = (String) userRecords.get(0)[1];
+        }
+
+        List<Integer> universityIds = universityRecords.stream()
                 .map(row -> (Integer) row[2])
                 .filter(Objects::nonNull)
                 .toList();
 
-        logger.info("Fetched courseId: {}, privacy: {}, universityIds: {}",
-                fetchedCourseId, privacy, universityIds);
+        List<String> userIds = userRecords.stream()
+                .map(row -> (String) row[2])
+                .filter(Objects::nonNull)
+                .toList();
 
-        return new CoursePrivacy(fetchedCourseId, privacy, universityIds);
+        logger.info("Fetched courseId: {}, privacy: {}, universityIds: {}, userIds: {}", courseId, privacy, universityIds, userIds);
+
+        return CoursePrivacy.builder()
+                .courseId(courseId)
+                .privacy(privacy)
+                .universityIds(universityIds)
+                .userIds(userIds)
+                .build();
     }
-
-
 }

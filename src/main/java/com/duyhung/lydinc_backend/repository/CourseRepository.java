@@ -12,7 +12,11 @@ import java.util.Optional;
 public interface CourseRepository extends JpaRepository<Course, Integer> {
 
     @Query(value = "select c.courseId as courseId, c.privacy as privacy ,e.university.universityId as universityId from Course c inner join Enrollment e on c.courseId = e.course.courseId and c.courseId = ?1")
-    List<Object[]> findCoursePrivacy(Integer courseId);
+    List<Object[]> findCoursePrivacyUniversity(Integer courseId);
+
+    @Query(value = "select c.courseId as courseId, c.privacy as privacy ,uc.user.userId as userId from Course c inner join UserCourse uc on c.courseId = uc.course.courseId and c.courseId = ?1")
+    List<Object[]> findCoursePrivacyUser(Integer courseId);
+
 
     Optional<List<Course>> findByLecturerId(String teacherId);
 }

@@ -14,4 +14,5 @@ public class CoursePrivacy {
     Integer courseId;
     String privacy;
     List<Integer> universityIds;
+    List<String> userIds;
 }

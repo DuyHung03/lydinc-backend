@@ -13,7 +13,16 @@ import java.util.Optional;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, String> {
+    @Query(value = "select u from User u inner join u.roles r where r.roleId = 1 and u.university.universityId is null ")
+    List<User> findAllStudent();
+
+//    @Query(value = "select u from User u inner join u.roles r where r.roleId = 1 and u.username like ?1")
+//    List<User> findStudentByUsername(String username);
+
     Optional<User> findByUsername(String username);
+
+    @Query(value = "select u.username from User u where u.username = ?1")
+    String checkUserExist(String username);
 
     Optional<List<User>> findByUniversityUniversityId(Integer id);
 

@@ -12,11 +12,11 @@ import lombok.*;
 @Table(name = "lesson")
 public class Lesson {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private String lessonId;
-    private String lessonTitle;
-
-    private String lessonContent;
+    private Integer index;
+    private Integer type;
+    private String url;
+    private String text;
 
     @ManyToOne
     @JoinColumn(name = "module_id")

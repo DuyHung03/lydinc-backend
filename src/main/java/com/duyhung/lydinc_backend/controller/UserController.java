@@ -25,6 +25,11 @@ public class UserController {
         return ResponseEntity.ok(userService.getAllAccounts(adminId, pageNo, pageSize));
     }
 
+    @GetMapping("/get-all-student")
+    public ResponseEntity<?> getAllStudents() {
+        return ResponseEntity.ok(userService.getAllStudents());
+    }
+
     @PostMapping("/change-password")
     public ResponseEntity<?> changePassword(
             @RequestParam String userId,

@@ -1,7 +1,9 @@
 package com.duyhung.lydinc_backend.service;
 
-import com.duyhung.lydinc_backend.model.Module;
-import com.duyhung.lydinc_backend.model.*;
+import com.duyhung.lydinc_backend.model.Enrollment;
+import com.duyhung.lydinc_backend.model.Lesson;
+import com.duyhung.lydinc_backend.model.University;
+import com.duyhung.lydinc_backend.model.User;
 import com.duyhung.lydinc_backend.model.dto.*;
 import org.springframework.stereotype.Service;
 
@@ -54,18 +56,13 @@ public abstract class AbstractService {
                 .build();
     }
 
-    public LessonDto mapToLessonDto(Lesson lesson, Module module) {
+    public LessonDto mapToLessonDto(Lesson lesson) {
         return LessonDto.builder()
                 .lessonId(lesson.getLessonId())
-                .lessonTitle(lesson.getLessonTitle())
-                .lessonContent(lesson.getLessonContent())
-                .module(ModuleDto.builder()
-                        .moduleId(module.getModuleId())
-                        .level(module.getLevel())
-                        .index(module.getIndex())
-                        .parentModuleId(module.getParentModuleId())
-                        .status(module.getStatus())
-                        .build())
+                .index(lesson.getIndex())
+                .type(lesson.getType())
+                .text(lesson.getText())
+                .url(lesson.getUrl())
                 .build();
     }
 
