@@ -16,7 +16,9 @@ public class Lesson {
     private Integer index;
     private Integer type;
     private String url;
+    @Column(columnDefinition = "TEXT")
     private String text;
+    private String fileName;
 
     @ManyToOne
     @JoinColumn(name = "module_id")

@@ -127,7 +127,7 @@ public class AuthService extends AbstractService {
             userDto.setIsPasswordFirstChanged(user.getIsPasswordFirstChanged());
             userDto.setIsAccountGranted(user.getIsAccountGranted());
             userDto.setRoles(user.getRoles().stream().map(Role::getRoleName).collect(Collectors.toSet()));
-
+            userDto.setUniversityId(user.getUniversity() != null ? user.getUniversity().getUniversityId() : null);
             logger.info("User {} logged in successfully", user.getUsername());
 
             AuthResponse authResponse = new AuthResponse();

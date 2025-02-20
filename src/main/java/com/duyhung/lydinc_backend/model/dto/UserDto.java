@@ -21,7 +21,7 @@ public class UserDto {
     private Integer isPasswordFirstChanged;
     private Integer isAccountGranted;
     private Set<String> roles;
-    private UniversityDto university;
+    private Integer universityId;
 
     public UserDto(String userId, String username, String email) {
         this.userId = userId;

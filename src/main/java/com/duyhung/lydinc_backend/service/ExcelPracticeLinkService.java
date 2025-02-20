@@ -16,8 +16,13 @@ public class ExcelPracticeLinkService {
     private final ExcelPracticeLinkRepository excelPracticeLinkRepository;
     private final GoogleDriveService googleDriveService;
 
-    public ExcelPracticeLink getPracticeLink(String studentId, String username, String schoolName, String moduleName, String lessonName)
-            throws GeneralSecurityException, IOException {
+    public ExcelPracticeLink getPracticeLink(
+            String studentId,
+            String username,
+            String schoolName,
+            String moduleName,
+            String lessonName
+    ) throws GeneralSecurityException, IOException {
         // Fetch existing practice link
         ExcelPracticeLink practiceLink = excelPracticeLinkRepository.findByStudentId(studentId);
 

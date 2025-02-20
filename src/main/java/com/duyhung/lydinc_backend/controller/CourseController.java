@@ -31,8 +31,10 @@ public class CourseController {
     }
 
     @GetMapping("/courses-by-student")
-    public ResponseEntity<?> getCourseByStudent(@RequestParam String studentId) {
-        return ResponseEntity.ok(courseService.getCourseByStudent(studentId));
+    public ResponseEntity<?> getCourseByStudent(
+            @RequestParam String studentId,
+            Integer universityId) {
+        return ResponseEntity.ok(courseService.getCourseByStudent(studentId, universityId));
     }
 
     @GetMapping("/courses-privacy")

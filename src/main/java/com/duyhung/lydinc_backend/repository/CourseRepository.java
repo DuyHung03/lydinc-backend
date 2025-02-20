@@ -17,6 +17,12 @@ public interface CourseRepository extends JpaRepository<Course, Integer> {
     @Query(value = "select c.courseId as courseId, c.privacy as privacy ,uc.user.userId as userId from Course c inner join UserCourse uc on c.courseId = uc.course.courseId and c.courseId = ?1")
     List<Object[]> findCoursePrivacyUser(Integer courseId);
 
-
     Optional<List<Course>> findByLecturerId(String teacherId);
+
+    @Query(value = "select new Course(c.courseId, c.title) from Course c join Enrollment e on c.courseId = e.course.courseId where e.university.universityId = ?1")
+    List<Course> findByUniversityId(Integer universityId);
+
+    @Query(value = "select new Course(c.courseId, c.title) from Course c join UserCourse uc on c.courseId = uc.course.courseId where uc.user.userId = ?1")
+    List<Course> findByUserId(String userId);
+
 }

@@ -20,10 +20,9 @@ public class GoogleDriveController {
     private final GoogleDriveService googleDriveService;
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<?> uploadFile(@RequestParam("file") MultipartFile file) {
         try {
-            String url = googleDriveService.uploadFileAndReturnUrl(file);
-            return ResponseEntity.ok(url);
+            return ResponseEntity.ok(googleDriveService.uploadFileAndReturnUrl(file));
         } catch (IOException | GeneralSecurityException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Upload failed");
         }

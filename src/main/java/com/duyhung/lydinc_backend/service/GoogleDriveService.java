@@ -1,7 +1,6 @@
 package com.duyhung.lydinc_backend.service;
 
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
-import com.google.api.client.http.FileContent;
 import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.http.InputStreamContent;
 import com.google.api.client.json.JsonFactory;
@@ -24,13 +23,14 @@ import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @Service
 public class GoogleDriveService {
 
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
+    @Value("${google-drive.parent-folder-id}")
+    public String parentFolderId;
 
     private static String getPathToGoogleClient() {
         String currentDir = System.getProperty("user.dir");
@@ -38,8 +38,24 @@ public class GoogleDriveService {
         return filePath.toString();
     }
 
-    @Value("${google-drive.parent-folder-id}")
-    public String parentFolderId;
+    private static Map<String, String> getFileDetails(MultipartFile multipartFile, File uploadedFile) {
+        String fileId = uploadedFile.getId();
+        String fileName = uploadedFile.getName();
+
+        String fileUrl;
+        if (multipartFile.getContentType().startsWith("video/")
+                || multipartFile.getContentType().startsWith("image/")) {
+            fileUrl = "https://drive.google.com/file/d/" + fileId + "/preview";
+        } else {
+            fileUrl = "https://drive.google.com/uc?export=download&id=" + fileId;
+        }
+
+        // Trả về cả URL và tên tệp
+        Map<String, String> response = new HashMap<>();
+        response.put("fileUrl", fileUrl);
+        response.put("fileName", fileName);
+        return response;
+    }
 
     private Drive createDriveService() throws IOException, GeneralSecurityException {
         GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream(getPathToGoogleClient()))
@@ -88,27 +104,23 @@ public class GoogleDriveService {
         return result.getFiles().get(0); // Return the file
     }
 
-    public String uploadFileAndReturnUrl(MultipartFile multipartFile) throws IOException, GeneralSecurityException {
+    public Map<String, String> uploadFileAndReturnUrl(MultipartFile multipartFile) throws IOException, GeneralSecurityException {
         Drive driveService = createDriveService();
-        String folderId = "10PaudcvfvSCvNHziQSFXCb1_hz1yervz"; // Your Google Drive folder ID
+        String folderId = "10PaudcvfvSCvNHziQSFXCb1_hz1yervz"; // Folder ID
 
-        // Prepare file metadata
         File fileMetadata = new File();
         fileMetadata.setName(multipartFile.getOriginalFilename());
         fileMetadata.setParents(Collections.singletonList(folderId));
 
-        // Use InputStreamContent for uploading directly from MultipartFile
+        // Upload file to Google Drive
         try (InputStream inputStream = multipartFile.getInputStream()) {
             InputStreamContent mediaContent = new InputStreamContent(multipartFile.getContentType(), inputStream);
 
-            // Upload to Google Drive
             File uploadedFile = driveService.files().create(fileMetadata, mediaContent)
-                    .setFields("id")
+                    .setFields("id, name")
                     .execute();
 
-            // Construct and return direct image view URL
-            String fileId = uploadedFile.getId();
-            return "https://lh3.googleusercontent.com/d/" + fileId;
+            return getFileDetails(multipartFile, uploadedFile);
         }
     }
 

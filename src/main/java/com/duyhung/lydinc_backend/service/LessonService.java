@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -52,7 +53,8 @@ public class LessonService extends AbstractService {
                         lessonDto.getLessonId(),
                         lessonDto.getIndex(),
                         lessonDto.getText(),
-                        lessonDto.getUrl()
+                        lessonDto.getUrl(),
+                        lessonDto.getFileName()
                 );
                 logger.info("Updated lesson with ID: {}", lessonDto.getLessonId());
             } else {
@@ -63,7 +65,8 @@ public class LessonService extends AbstractService {
                         lessonDto.getIndex(),
                         lessonDto.getText(),
                         lessonDto.getType(),
-                        lessonDto.getUrl()
+                        lessonDto.getUrl(),
+                        lessonDto.getFileName()
                 );
                 logger.info("Added new lesson with ID: {}", lessonDto.getLessonId());
             }
@@ -88,6 +91,7 @@ public class LessonService extends AbstractService {
         logger.info("Found {} lessons for moduleId: {}", contents.size(), moduleId);
 
         return contents.stream()
+                .sorted(Comparator.comparingInt(Lesson::getIndex))
                 .map(this::mapToLessonDto)
                 .collect(Collectors.toList());
     }

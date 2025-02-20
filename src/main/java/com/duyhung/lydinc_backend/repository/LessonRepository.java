@@ -19,14 +19,15 @@ public interface LessonRepository extends JpaRepository<Lesson, String> {
 
     @Modifying
     @Transactional
-    @Query(value = "insert into lesson (lesson_id, module_id, index, text, type, url) values (?1,?2,?3,?4,?5,?6)", nativeQuery = true)
+    @Query(value = "insert into lesson (lesson_id, module_id, index, text, type, url, file_name) values (?1,?2,?3,?4,?5,?6,?7)", nativeQuery = true)
     void addLesson(
             String lessonId,
             String moduleId,
             Integer index,
             String text,
             Integer type,
-            String url
+            String url,
+            String fileName
     );
 
     @Query(value = "select l.lessonId from Lesson l where l.lessonId = ?1")
@@ -34,12 +35,13 @@ public interface LessonRepository extends JpaRepository<Lesson, String> {
 
     @Modifying
     @Transactional
-    @Query(value = "update Lesson l set l.index = ?2, l.text = ?3, l.url = ?4 where l.lessonId = ?1")
+    @Query(value = "update Lesson l set l.index = ?2, l.text = ?3, l.url = ?4, l.fileName = ?5 where l.lessonId = ?1")
     void updateLessonByLessonId(
             String lessonId,
             Integer index,
             String text,
-            String url
+            String url,
+            String fileName
     );
 
     @Modifying

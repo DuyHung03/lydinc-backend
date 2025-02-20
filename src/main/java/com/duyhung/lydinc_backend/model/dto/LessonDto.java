@@ -16,4 +16,5 @@ public class LessonDto {
     private Integer type;
     private String url;
     private String text;
+    private String fileName;
 }

@@ -47,23 +47,37 @@ public class CourseService extends AbstractService {
 
         logger.info("Found {} courses for lecturer '{}'", courses.size(), lecturerId);
 
-        return courses.stream().map(course -> CourseDto.builder().courseId(course.getCourseId()).title(course.getTitle()).enrollmentDate(course.getEnrollmentDate()).status(course.getStatus()).lecturerId(lecturerId).lecturerName(lecturer.getUsername()).lecturerEmail(lecturer.getEmail()).lecturerPhoto(lecturer.getPhotoUrl()).privacy(course.getPrivacy()).build()).collect(Collectors.toList());
+        return courses.stream().map(
+                course -> CourseDto.builder()
+                        .courseId(course.getCourseId())
+                        .title(course.getTitle())
+                        .enrollmentDate(course
+                                .getEnrollmentDate())
+                        .status(course.getStatus())
+                        .lecturerId(lecturerId)
+                        .lecturerName(lecturer.getUsername()
+                        ).lecturerEmail(
+                                lecturer.getEmail())
+                        .lecturerPhoto(lecturer.getPhotoUrl())
+                        .privacy(course.getPrivacy())
+                        .build()
+        ).collect(Collectors.toList());
     }
 
-    public String getCourseByStudent(String studentId) {
-//        logger.info("Fetching courses for student with ID '{}'", studentId);
-//
-//        List<Enrollment> enrollments = enrollmentRepository.findByUserUserId(studentId);
-//
-//        if (enrollments.isEmpty()) {
-//            logger.warn("No enrollments found for student '{}'", studentId);
-//        } else {
-//            logger.info("Found {} enrollments for student '{}'", enrollments.size(), studentId);
-//        }
-//
-//        return enrollments.stream().map(this::mapToCourseDto).collect(Collectors.toList());
-        return ";";
+    public List<Course> getCourseByStudent(String studentId, Integer universityId) {
+        logger.info("Fetching courses for student with ID '{}'", studentId);
+
+        if (universityId != null) {
+            // If universityId is provided, fetch courses by university ID
+            logger.info("Fetching courses for university ID '{}'", universityId);
+            return courseRepository.findByUniversityId(universityId);
+        } else {
+            // If universityId is null, fetch courses by student (user) ID
+            logger.info("Fetching courses for student (user) ID '{}'", studentId);
+            return courseRepository.findByUserId(studentId);
+        }
     }
+
 
     @Transactional
     public String createNewCourse(

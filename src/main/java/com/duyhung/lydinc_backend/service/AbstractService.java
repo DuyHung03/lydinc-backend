@@ -47,12 +47,7 @@ public abstract class AbstractService {
                 .name(user.getName())
                 .isPasswordFirstChanged(user.getIsPasswordFirstChanged())
                 .isAccountGranted(user.getIsAccountGranted())
-                .university(UniversityDto.builder()
-                        .universityId(user.getUniversity().getUniversityId())
-                        .shortName(user.getUniversity().getShortName())
-                        .fullName(user.getUniversity().getFullName())
-                        .build()
-                )
+                .universityId(user.getUniversity().getUniversityId())
                 .build();
     }
 
@@ -63,6 +58,7 @@ public abstract class AbstractService {
                 .type(lesson.getType())
                 .text(lesson.getText())
                 .url(lesson.getUrl())
+                .fileName(lesson.getFileName())
                 .build();
     }
 
