@@ -19,10 +19,9 @@ public class Notification {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
     private String userId;
+    private String title;
     private String message;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
-
-    private Boolean seen;
 }

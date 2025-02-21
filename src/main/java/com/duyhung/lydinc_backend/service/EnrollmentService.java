@@ -2,6 +2,7 @@ package com.duyhung.lydinc_backend.service;
 
 import com.duyhung.lydinc_backend.model.Course;
 import com.duyhung.lydinc_backend.model.Enrollment;
+import com.duyhung.lydinc_backend.model.Notification;
 import com.duyhung.lydinc_backend.model.University;
 import com.duyhung.lydinc_backend.repository.EnrollmentRepository;
 import com.duyhung.lydinc_backend.repository.UniversityRepository;
@@ -13,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 
 @Service
@@ -22,6 +24,8 @@ public class EnrollmentService {
     private final EnrollmentRepository enrollmentRepository;
     private final UniversityRepository universityRepository;
     private final UserCourseRepository userCourseRepository;
+    private final NotificationService notificationService;
+
 
     @Transactional
     public void assignUniversityToCourse(
@@ -50,9 +54,15 @@ public class EnrollmentService {
         userCourseRepository.deleteAllByCourseId(course.getCourseId());
         userIds.forEach(id -> {
             userCourseRepository.insertUserEnrollment(course.getCourseId(), id);
+            notificationService.sendAssignmentNotification(id, Notification.builder()
+                    .id(UUID.randomUUID().toString())
+                    .userId(id)
+                    .title("Assignment")
+                    .message("You were bla bla")
+                    .build());
         });
     }
-    
+
     public Enrollment getEnrollmentById(Integer enrollmentId) {
         return enrollmentRepository.findById(enrollmentId).orElseThrow(() -> new RuntimeException("Enrollment not found"));
     }
