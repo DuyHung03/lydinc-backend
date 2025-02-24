@@ -6,6 +6,7 @@ import com.duyhung.lydinc_backend.model.University;
 import com.duyhung.lydinc_backend.repository.EnrollmentRepository;
 import com.duyhung.lydinc_backend.repository.UniversityRepository;
 import com.duyhung.lydinc_backend.repository.UserCourseRepository;
+import com.duyhung.lydinc_backend.service.kafka.KafkaProducerService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -22,6 +23,7 @@ public class EnrollmentService {
     private final EnrollmentRepository enrollmentRepository;
     private final UniversityRepository universityRepository;
     private final UserCourseRepository userCourseRepository;
+    private final NotificationService notificationService;
 
     @Transactional
     public void assignUniversityToCourse(
@@ -50,9 +52,10 @@ public class EnrollmentService {
         userCourseRepository.deleteAllByCourseId(course.getCourseId());
         userIds.forEach(id -> {
             userCourseRepository.insertUserEnrollment(course.getCourseId(), id);
+            notificationService.sendNotificationToCourseStudents(id, "helooooooooooooo");
         });
     }
-    
+
     public Enrollment getEnrollmentById(Integer enrollmentId) {
         return enrollmentRepository.findById(enrollmentId).orElseThrow(() -> new RuntimeException("Enrollment not found"));
     }
