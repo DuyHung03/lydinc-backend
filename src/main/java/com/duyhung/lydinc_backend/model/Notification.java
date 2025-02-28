@@ -1,6 +1,5 @@
 package com.duyhung.lydinc_backend.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,11 +18,11 @@ public class Notification {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-    @JsonIgnore
     private String userId;
+    private Integer universityId;
     private String title;
     private String message;
-
-//    @Column(nullable = false, updatable = false)
-//    private LocalDateTime createdAt;
+    private boolean isSeen = false;
+    private Integer type = 1;
+    private LocalDateTime createdAt;
 }

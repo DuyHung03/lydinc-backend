@@ -10,8 +10,8 @@ public class KafkaConfig {
     @Bean
     public NewTopic notificationTopic() {
         return TopicBuilder.name("notification-topic")
-                .partitions(1)
-                .replicas(1)
+                .partitions(3)
+                .replicas(3)
                 .build();
     }
 }

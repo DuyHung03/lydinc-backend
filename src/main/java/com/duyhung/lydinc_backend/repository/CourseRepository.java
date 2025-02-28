@@ -25,4 +25,6 @@ public interface CourseRepository extends JpaRepository<Course, Integer> {
     @Query(value = "select new Course(c.courseId, c.title) from Course c join UserCourse uc on c.courseId = uc.course.courseId where uc.user.userId = ?1")
     List<Course> findByUserId(String userId);
 
+    @Query(value = "select case when count (c) > 0 then true else false end from Course c where c.lecturerId = ?1 and c.courseId = ?2")
+    boolean isLecturer(String userId, Integer courseId);
 }

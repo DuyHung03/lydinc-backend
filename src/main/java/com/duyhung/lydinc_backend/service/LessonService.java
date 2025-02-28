@@ -1,9 +1,10 @@
 package com.duyhung.lydinc_backend.service;
 
 import com.duyhung.lydinc_backend.model.Lesson;
+import com.duyhung.lydinc_backend.model.User;
 import com.duyhung.lydinc_backend.model.dto.LessonDto;
-import com.duyhung.lydinc_backend.repository.LessonRepository;
-import com.duyhung.lydinc_backend.repository.ModuleRepository;
+import com.duyhung.lydinc_backend.repository.*;
+import com.duyhung.lydinc_backend.utils.SecurityUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -11,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -21,6 +21,10 @@ import java.util.stream.Collectors;
 public class LessonService extends AbstractService {
     private static final Logger logger = LoggerFactory.getLogger(LessonService.class);
     private final LessonRepository lessonRepository;
+    private final EnrollmentRepository enrollmentRepository;
+    private final UserCourseRepository userCourseRepository;
+    private final UserRepository userRepository;
+    private final CourseRepository courseRepository;
 
     @Transactional
     public String updateLessonData(List<LessonDto> lessons, String moduleId) {
@@ -77,22 +81,42 @@ public class LessonService extends AbstractService {
     }
 
 
-    public List<LessonDto> getLessonData(String moduleId) {
+    public List<LessonDto> getLessonData(String moduleId, Integer courseId) {
+        String userId = SecurityUtils.getUserIdFromAuthentication();
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        validateUserAccess(user, courseId);
 
         logger.info("Fetching lessons for moduleId: {}", moduleId);
 
-        List<Lesson> contents = lessonRepository.findByModule_ModuleId(moduleId);
+        List<Lesson> lessons = lessonRepository.findByModule_ModuleId(moduleId);
 
-        if (contents == null || contents.isEmpty()) {
+        if (lessons.isEmpty()) {
             logger.warn("No lessons found for moduleId: {}", moduleId);
             return Collections.emptyList();
         }
 
-        logger.info("Found {} lessons for moduleId: {}", contents.size(), moduleId);
+        logger.info("Found {} lessons for moduleId: {}", lessons.size(), moduleId);
 
-        return contents.stream()
-                .sorted(Comparator.comparingInt(Lesson::getIndex))
-                .map(this::mapToLessonDto)
-                .collect(Collectors.toList());
+        return lessons.stream().map(this::mapToLessonDto).toList();
     }
+
+    private void validateUserAccess(User user, Integer courseId) {
+        boolean isAllowed;
+
+        if (user.getRoles().stream().anyMatch(role -> role.getRoleId().equals(1))) {
+            isAllowed = (user.getUniversity() != null)
+                    ? enrollmentRepository.checkExistUser(user.getUniversity().getUniversityId(), courseId)
+                    : userCourseRepository.checkExistUser(user.getUserId(), courseId);
+        } else {
+            isAllowed = courseRepository.isLecturer(user.getUserId(), courseId);
+        }
+
+        if (!isAllowed) {
+            throw new RuntimeException("You're not allowed to access the course");
+        }
+    }
+
 }

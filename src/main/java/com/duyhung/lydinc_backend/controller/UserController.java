@@ -1,6 +1,7 @@
 package com.duyhung.lydinc_backend.controller;
 
 import com.duyhung.lydinc_backend.service.UserService;
+import com.duyhung.lydinc_backend.utils.SecurityUtils;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,14 +16,15 @@ public class UserController {
 
     @GetMapping("/get-user-info")
     public ResponseEntity<?> getUserInfo(
-            @RequestParam String userId
     ) {
+        String userId = SecurityUtils.getUserIdFromAuthentication();
         return ResponseEntity.ok(userService.getUserInfo(userId));
     }
 
     @GetMapping("/get-all")
-    public ResponseEntity<?> getAllAccounts(@RequestParam String adminId, @RequestParam int pageNo, @RequestParam int pageSize) {
-        return ResponseEntity.ok(userService.getAllAccounts(adminId, pageNo, pageSize));
+    public ResponseEntity<?> getAllAccounts(@RequestParam int pageNo, @RequestParam int pageSize) {
+        String userId = SecurityUtils.getUserIdFromAuthentication();
+        return ResponseEntity.ok(userService.getAllAccounts(userId, pageNo, pageSize));
     }
 
     @GetMapping("/get-all-student")
@@ -32,9 +34,9 @@ public class UserController {
 
     @PostMapping("/change-password")
     public ResponseEntity<?> changePassword(
-            @RequestParam String userId,
             @RequestParam String newPassword
     ) throws MessagingException {
+        String userId = SecurityUtils.getUserIdFromAuthentication();
         return ResponseEntity.ok(userService.changePassword(userId, newPassword));
     }
 }

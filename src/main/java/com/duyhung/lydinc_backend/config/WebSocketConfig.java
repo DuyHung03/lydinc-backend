@@ -15,7 +15,11 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(notificationWebSocketHandler, "/notifications").setAllowedOrigins("*");
+        registry.addHandler(
+                        notificationWebSocketHandler,
+                        "/notifications/{type}/{path}"
+                )
+                .setAllowedOrigins("*");
     }
 }
 

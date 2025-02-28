@@ -3,6 +3,7 @@ package com.duyhung.lydinc_backend.controller;
 import com.duyhung.lydinc_backend.model.dto.EditPrivacyRequest;
 import com.duyhung.lydinc_backend.model.dto.NewCourseRequest;
 import com.duyhung.lydinc_backend.service.CourseService;
+import com.duyhung.lydinc_backend.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,7 +17,8 @@ public class CourseController {
 
     @PostMapping("/new-course")
     public ResponseEntity<?> createNewCourse(@RequestBody NewCourseRequest request) {
-        return ResponseEntity.ok(courseService.createNewCourse(request.getTitle(), request.getModules(), request.getLecturerId()));
+        String lecturerId = SecurityUtils.getUserIdFromAuthentication();
+        return ResponseEntity.ok(courseService.createNewCourse(request.getTitle(), request.getModules(), lecturerId));
     }
 
     @PostMapping("/edit-privacy")
@@ -26,14 +28,16 @@ public class CourseController {
     }
 
     @GetMapping("/courses-by-lecturer")
-    public ResponseEntity<?> getCourseByLecturer(@RequestParam String lecturerId) {
+    public ResponseEntity<?> getCourseByLecturer() {
+        String lecturerId = SecurityUtils.getUserIdFromAuthentication();
         return ResponseEntity.ok(courseService.getCourseByLecturer(lecturerId));
     }
 
     @GetMapping("/courses-by-student")
     public ResponseEntity<?> getCourseByStudent(
-            @RequestParam String studentId,
-            Integer universityId) {
+            Integer universityId
+    ) {
+        String studentId = SecurityUtils.getUserIdFromAuthentication();
         return ResponseEntity.ok(courseService.getCourseByStudent(studentId, universityId));
     }
 

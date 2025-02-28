@@ -1,7 +1,6 @@
 package com.duyhung.lydinc_backend.service;
 
 import com.duyhung.lydinc_backend.exception.JwtValidationException;
-import com.duyhung.lydinc_backend.utils.CookieUtils;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
@@ -17,7 +16,6 @@ import java.util.Date;
 @RequiredArgsConstructor
 public class JwtService {
 
-    private final CookieUtils cookieUtils;
     @Value("${jwt.secret-key}")
     String secretKey;
     @Value("${jwt.accessToken-expiration}")
@@ -33,17 +31,19 @@ public class JwtService {
         return key;
     }
 
-    public String generateAccessToken(String username) {
+    public String generateAccessToken(String username, String userId) {
         return Jwts.builder()
                 .subject(username)
+                .claim("id", userId)
                 .expiration(new Date(System.currentTimeMillis() + ACCESS_TOKEN_EXPIRY_DATE))
                 .signWith(getSecretKey())
                 .compact();
     }
 
-    public String generateRefreshToken(String username) {
+    public String generateRefreshToken(String username, String userId) {
         return Jwts.builder()
                 .subject(username)
+                .claim("id", userId)
                 .expiration(new Date(System.currentTimeMillis() + REFRESH_TOKEN_EXPIRY_DATE))
                 .signWith(getSecretKey())
                 .compact();

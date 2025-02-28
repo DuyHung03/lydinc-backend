@@ -5,23 +5,20 @@ import com.duyhung.lydinc_backend.exception.JwtValidationException;
 import com.duyhung.lydinc_backend.model.Role;
 import com.duyhung.lydinc_backend.model.University;
 import com.duyhung.lydinc_backend.model.User;
-import com.duyhung.lydinc_backend.model.auth.AuthResponse;
 import com.duyhung.lydinc_backend.model.auth.LoginRequest;
 import com.duyhung.lydinc_backend.model.auth.RegisterRequest;
-import com.duyhung.lydinc_backend.model.dto.UserDto;
 import com.duyhung.lydinc_backend.repository.RoleRepository;
 import com.duyhung.lydinc_backend.repository.UniversityRepository;
 import com.duyhung.lydinc_backend.repository.UserRepository;
 import com.duyhung.lydinc_backend.utils.CookieUtils;
+import io.jsonwebtoken.Claims;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -32,7 +29,6 @@ import org.springframework.stereotype.Service;
 import java.security.SecureRandom;
 import java.util.HashSet;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -45,12 +41,10 @@ public class AuthService extends AbstractService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtUtils;
     private final CookieUtils cookieUtils;
-    private final ModelMapper modelMapper;
     private final AuthenticationManager authenticationManager;
     private final UniversityRepository universityRepository;
     private final EmailService emailService;
     private final JwtService jwtService;
-    private final CourseService courseService;
 
     @Value("${jwt.accessToken-expiration}")
     private int ACCESS_TOKEN_EXPIRY_DATE;
@@ -105,7 +99,7 @@ public class AuthService extends AbstractService {
         return "Create account and send email successfully!";
     }
 
-    public AuthResponse login(LoginRequest loginRequest, HttpServletResponse response) {
+    public boolean login(LoginRequest loginRequest, HttpServletResponse response) {
         try {
             logger.info("Attempting login for username: {}", loginRequest.getUsername());
 
@@ -115,26 +109,13 @@ public class AuthService extends AbstractService {
                     ));
 
             User user = (User) authentication.getPrincipal();
-            String accessToken = jwtUtils.generateAccessToken(user.getUsername());
-            String refreshToken = jwtUtils.generateRefreshToken(user.getUsername());
+            String accessToken = jwtUtils.generateAccessToken(user.getUsername(), user.getUserId());
+            String refreshToken = jwtUtils.generateRefreshToken(user.getUsername(), user.getUserId());
 
             cookieUtils.setCookie("accessToken", accessToken, ACCESS_TOKEN_EXPIRY_DATE / 1000, response);
             cookieUtils.setCookie("refreshToken", refreshToken, REFRESH_TOKEN_EXPIRY_DATE / 1000, response);
-
-            UserDto userDto = new UserDto();
-            userDto.setUserId(user.getUserId());
-            userDto.setUsername(user.getUsername());
-            userDto.setIsPasswordFirstChanged(user.getIsPasswordFirstChanged());
-            userDto.setIsAccountGranted(user.getIsAccountGranted());
-            userDto.setRoles(user.getRoles().stream().map(Role::getRoleName).collect(Collectors.toSet()));
-            userDto.setUniversityId(user.getUniversity() != null ? user.getUniversity().getUniversityId() : null);
             logger.info("User {} logged in successfully", user.getUsername());
-
-            AuthResponse authResponse = new AuthResponse();
-            authResponse.setCode(HttpStatus.OK.value());
-            authResponse.setUser(userDto);
-            return authResponse;
-
+            return true;
         } catch (BadCredentialsException e) {
             logger.error("Invalid login attempt for username: {}", loginRequest.getUsername());
             throw new AuthValidationException("Invalid username or password");
@@ -144,13 +125,23 @@ public class AuthService extends AbstractService {
     public String refreshToken(HttpServletRequest request, HttpServletResponse response) {
         try {
             logger.info("Attempting to refresh token");
+
+            // Get refresh token from cookies
             String refreshToken = cookieUtils.getCookie(request, "refreshToken");
             if (refreshToken == null || !jwtService.verifyToken(refreshToken)) {
                 logger.error("Invalid or missing refresh token");
                 throw new JwtValidationException("Unauthorized");
             }
 
-            String newAccessToken = jwtService.generateAccessToken(jwtService.getUsername(refreshToken));
+            // Extract user info from the refresh token
+            Claims claims = jwtService.getClaimsFromToken(refreshToken);
+            String username = claims.getSubject();
+            String userId = claims.get("id", String.class); // Extract userId from claims
+
+            // Generate new access token with user info
+            String newAccessToken = jwtService.generateAccessToken(username, userId);
+
+            // Set new access token in cookies
             cookieUtils.setCookie("accessToken", newAccessToken, 86400, response);
 
             logger.info("Token refreshed successfully");
@@ -160,6 +151,7 @@ public class AuthService extends AbstractService {
             throw new RuntimeException(e.getMessage());
         }
     }
+
 
     private String generateRandomPassword() {
         String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
@@ -204,5 +196,4 @@ public class AuthService extends AbstractService {
         return "Create account successfully!";
 
     }
-
 }

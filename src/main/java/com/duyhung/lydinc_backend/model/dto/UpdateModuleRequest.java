@@ -14,7 +14,5 @@ import java.util.List;
 public class UpdateModuleRequest {
     Integer courseId;
     String title;
-    List<ModuleDto> createdModules;
-    List<String> deletedModuleIds;
-    List<ModuleDto> updatedModules;
+    List<ModuleDto> modules;
 }
