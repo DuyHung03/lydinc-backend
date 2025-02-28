@@ -1,6 +1,5 @@
 package com.duyhung.lydinc_backend.service.kafka;
 
-
 import com.duyhung.lydinc_backend.model.Notification;
 import com.duyhung.lydinc_backend.websocket.NotificationWebSocketHandler;
 import lombok.RequiredArgsConstructor;
