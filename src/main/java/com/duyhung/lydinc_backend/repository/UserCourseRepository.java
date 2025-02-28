@@ -19,5 +19,13 @@ public interface UserCourseRepository extends JpaRepository<UserCourse, Integer>
     @Query(value = "insert into user_course (course_id, user_id) values (?1, ?2)", nativeQuery = true)
     void insertUserEnrollment(Integer courseId, String userId);
 
+    @Query(value = "select " +
+            "case " +
+            "when count(uc) > 0 " +
+            "then true " +
+            "else false " +
+            "end " +
+            "from UserCourse uc where uc.user.userId = ?1 and uc.course.courseId=?2")
+    boolean checkExistUser(String userId, Integer courseId);
 
 }

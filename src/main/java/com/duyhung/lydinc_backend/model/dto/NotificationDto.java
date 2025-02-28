@@ -5,13 +5,16 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
+import java.time.LocalDateTime;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class NewCourseRequest {
+public class NotificationDto {
     private String title;
-    private List<ModuleDto> modules;
+    private String message;
+    private boolean isSeen = false;
+    private Integer type;
+    private LocalDateTime createAt;
 }

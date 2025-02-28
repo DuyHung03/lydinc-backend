@@ -47,7 +47,7 @@ public abstract class AbstractService {
                 .name(user.getName())
                 .isPasswordFirstChanged(user.getIsPasswordFirstChanged())
                 .isAccountGranted(user.getIsAccountGranted())
-                .universityId(user.getUniversity().getUniversityId())
+                .universityId(user.getUniversity() != null ? user.getUniversity().getUniversityId() : null)
                 .build();
     }
 

@@ -24,7 +24,10 @@ public class LessonController {
     }
 
     @GetMapping("get-lesson-data")
-    public ResponseEntity<?> getLessonData(@RequestParam String moduleId) {
-        return ResponseEntity.ok(lessonService.getLessonData(moduleId));
+    public ResponseEntity<?> getLessonData(
+            @RequestParam String moduleId,
+            Integer courseId
+    ) {
+        return ResponseEntity.ok(lessonService.getLessonData(moduleId, courseId));
     }
 }

@@ -3,8 +3,6 @@ package com.duyhung.lydinc_backend.controller;
 import com.duyhung.lydinc_backend.model.dto.UpdateModuleRequest;
 import com.duyhung.lydinc_backend.service.ModuleService;
 import lombok.RequiredArgsConstructor;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,7 +24,7 @@ public class ModuleController {
     public ResponseEntity<?> updateModuleByCourseId(
             @RequestBody UpdateModuleRequest request
     ) {
-        return ResponseEntity.ok(moduleService.updateModulesTitle(request));
+        return ResponseEntity.ok(moduleService.updateModules(request));
     }
 
 }

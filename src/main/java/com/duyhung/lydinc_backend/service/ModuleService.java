@@ -15,6 +15,8 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -47,55 +49,69 @@ public class ModuleService {
     }
 
     @Transactional
-    public String updateModulesTitle(UpdateModuleRequest request) {
+    public String updateModules(UpdateModuleRequest request) {
         try {
             logger.info("Updating modules for course ID: {}", request.getCourseId());
 
+            // Fetch the course
             Course course = courseRepository.findById(request.getCourseId()).orElseThrow(() -> {
                 logger.error("Course not found for ID: {}", request.getCourseId());
                 return new RuntimeException("Course not found");
             });
 
+            // Update course title if changed
             if (request.getTitle() != null) {
                 logger.info("Updating course title to '{}'", request.getTitle());
                 course.setTitle(request.getTitle());
                 courseRepository.save(course);
             }
 
-            request.getCreatedModules().forEach(module -> {
-                logger.debug("Creating new module with title: {}", module.getModuleTitle());
-                moduleRepository.save(Module.builder().moduleId(module.getModuleId()).moduleTitle(module.getModuleTitle()).level(module.getLevel()).index(module.getIndex()).status("created").parentModuleId(module.getParentModuleId()).course(course).build());
-            });
+            // Fetch existing modules for the course
+            List<Module> existingModules = moduleRepository.findByCourse_CourseId(request.getCourseId());
+            Set<String> incomingModuleIds = request.getModules().stream()
+                    .map(ModuleDto::getModuleId)
+                    .collect(Collectors.toSet());
 
-            request.getDeletedModuleIds().forEach(moduleId -> {
-                String module = moduleRepository.findByModuleId(moduleId)
-                        .orElseThrow(() -> new RuntimeException("Module not found for ID: " + moduleId));
+            // Identify modules to delete (modules in DB but not in incoming list)
+            List<Module> modulesToDelete = existingModules.stream()
+                    .filter(module -> !incomingModuleIds.contains(module.getModuleId()))
+                    .toList();
 
-                logger.debug("Deleting related lessons for module ID: {}", moduleId);
-                lessonRepository.deleteAllByModule_ModuleId(module);
+            // Delete related lessons and modules
+            for (Module module : modulesToDelete) {
+                logger.debug("Deleting lessons for module ID: {}", module.getModuleId());
+                lessonRepository.deleteAllByModule_ModuleId(module.getModuleId());
 
-                logger.debug("Deleting module with ID: {}", moduleId);
-                moduleRepository.deleteByModuleId(module);
-            });
+                logger.debug("Deleting module ID: {}", module.getModuleId());
+                moduleRepository.delete(module);
+            }
 
+            // Process the remaining modules (Create/Update)
+            for (ModuleDto moduleDto : request.getModules()) {
+                Module module = existingModules.stream()
+                        .filter(m -> m.getModuleId().equals(moduleDto.getModuleId()))
+                        .findFirst()
+                        .orElse(new Module());
 
-            request.getUpdatedModules().forEach(module -> {
-                Module existingModule = moduleRepository.findById(module.getModuleId()).orElseThrow(() -> {
-                    logger.error("Module not found for ID: {}", module.getModuleId());
-                    return new RuntimeException("Module not found");
-                });
-                logger.debug("Updating module ID: {} with new title: {}", module.getModuleId(), module.getModuleTitle());
-                existingModule.setModuleTitle(module.getModuleTitle());
-                moduleRepository.save(existingModule);
-            });
+                module.setModuleId(moduleDto.getModuleId());
+                module.setModuleTitle(moduleDto.getModuleTitle());
+                module.setLevel(moduleDto.getLevel());
+                module.setIndex(moduleDto.getIndex());
+                module.setParentModuleId(moduleDto.getParentModuleId());
+                module.setStatus("updated");
+                module.setCourse(course);
 
-            logger.info("Module updates completed successfully for course ID: {}", request.getCourseId());
-            return "Update successfully";
+                moduleRepository.save(module);
+            }
+
+            logger.info("Modules updated successfully for course ID: {}", request.getCourseId());
+            return "Update successful";
 
         } catch (RuntimeException e) {
-            logger.error("Error during module update for course ID: {}", request.getCourseId(), e);
+            logger.error("Error updating modules for course ID: {}", request.getCourseId(), e);
             throw new RuntimeException(e.getMessage());
         }
     }
+
 }
 
