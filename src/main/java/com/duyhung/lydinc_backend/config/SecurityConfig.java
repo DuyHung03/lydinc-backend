@@ -1,16 +1,11 @@
 package com.duyhung.lydinc_backend.config;
 
-import com.duyhung.lydinc_backend.model.ErrorResponse;
 import com.duyhung.lydinc_backend.service.UserDetailsServiceImp;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -39,7 +34,6 @@ public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
     private final UserDetailsServiceImp userDetailsServiceImp;
-    private final RouteConfig routeConfig;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
@@ -53,8 +47,6 @@ public class SecurityConfig {
                             .requestMatchers(HttpMethod.GET, "/courses/**").hasAnyAuthority("LECTURER", "STUDENT")
                             .requestMatchers(HttpMethod.POST, "/school/**").hasAnyAuthority("LECTURER", "ADMIN")
                             .requestMatchers(HttpMethod.GET, "/school/**").hasAnyAuthority("LECTURER", "STUDENT")
-                            .requestMatchers(HttpMethod.GET, "/user/**").hasAnyAuthority("LECTURER", "ADMIN")
-                            .requestMatchers(HttpMethod.POST, "/user/**").hasAnyAuthority("LECTURER", "ADMIN", "STUDENT")
                             .requestMatchers(HttpMethod.POST, "/admin/**").hasAnyAuthority("ADMIN")
                             .anyRequest().authenticated();
                 })

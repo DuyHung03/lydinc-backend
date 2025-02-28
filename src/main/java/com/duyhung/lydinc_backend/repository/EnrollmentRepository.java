@@ -17,6 +17,15 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Integer>
     @Query(value = "select e.enrollmentId from Enrollment e")
     List<Integer> findAllEnrollmentIds();
 
+    @Query(value = "select " +
+            "case " +
+            "when count(e) > 0 " +
+            "then true " +
+            "else false " +
+            "end " +
+            "from Enrollment e where e.university.universityId = ?1 and e.course.courseId=?2")
+    boolean checkExistUser(Integer universityId, Integer courseId);
+
     @Modifying
     @Transactional
     @Query(value = "delete from Enrollment e where e.enrollmentId = ?1")

@@ -5,6 +5,7 @@ import com.duyhung.lydinc_backend.model.User;
 import com.duyhung.lydinc_backend.service.JwtService;
 import com.duyhung.lydinc_backend.service.UserDetailsServiceImp;
 import com.duyhung.lydinc_backend.utils.CookieUtils;
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -34,7 +35,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
         // Skip token validation for public routes
         if (routeConfig.isPublicRoute(requestURI)) {
-            filterChain.doFilter(request, response); // Continue the filter chain
+            filterChain.doFilter(request, response);
             return;
         }
 
@@ -48,11 +49,13 @@ public class JwtFilter extends OncePerRequestFilter {
 
             if (SecurityContextHolder.getContext().getAuthentication() == null) {
                 String username = jwtService.getUsername(accessToken);
-
+                Claims claims = jwtService.getClaimsFromToken(accessToken);
+                String userId = claims.get("id", String.class);
                 if (username != null && jwtService.verifyToken(accessToken)) {
                     User userDetails = (User) userDetailsService.loadUserByUsername(username);
                     UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                     authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    authenticationToken.setDetails(userId);
                     SecurityContextHolder.getContext().setAuthentication(authenticationToken);
                 } else {
                     throw new JwtValidationException("Invalid token");
