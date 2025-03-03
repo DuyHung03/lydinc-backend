@@ -30,11 +30,10 @@ public class UniversityService extends AbstractService {
     }
 
     public List<UniversityDto> getAllUniversities() {
-        List<University> universities = universityRepository.findAll();
+        List<University> universities = universityRepository.findAllUniversities();
 
         return universities.stream().map(this::mapToUniversityDto)
                 .collect(Collectors.toList());
-
     }
 
     public List<UserDto> getStudentsOfUniversity(Integer universityId) {
@@ -43,5 +42,4 @@ public class UniversityService extends AbstractService {
 
         return users.stream().map(this::mapUserToDto).collect(Collectors.toList());
     }
-
 }

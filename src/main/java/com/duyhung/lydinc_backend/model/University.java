@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.checkerframework.checker.units.qual.A;
 
 import java.util.List;
 
@@ -23,8 +22,24 @@ public class University {
     String fullName;
     String logo;
     String location;
+    Long studentCount;
 
     @OneToMany(mappedBy = "university", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<User> students;
 
+    public University(
+            Integer universityId,
+            String shortName,
+            String fullName,
+            String logo,
+            String location,
+            Long studentCount
+    ) {
+        this.universityId = universityId;
+        this.shortName = shortName;
+        this.fullName = fullName;
+        this.logo = logo;
+        this.location = location;
+        this.studentCount = studentCount;
+    }
 }

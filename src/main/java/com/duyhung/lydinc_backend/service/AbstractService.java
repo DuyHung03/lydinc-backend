@@ -33,7 +33,7 @@ public abstract class AbstractService {
                 .fullName(university.getFullName())
                 .logo(university.getLogo())
                 .location(university.getLocation())
-                .studentCount(university.getStudents().size())
+                .studentCount(university.getStudentCount())
                 .build();
     }
 

@@ -29,7 +29,6 @@ public class CourseService extends AbstractService {
 
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
-    private final EnrollmentRepository enrollmentRepository;
     private final ModuleRepository moduleRepository;
     private final EnrollmentService enrollmentService;
 
@@ -51,13 +50,11 @@ public class CourseService extends AbstractService {
                 course -> CourseDto.builder()
                         .courseId(course.getCourseId())
                         .title(course.getTitle())
-                        .enrollmentDate(course
-                                .getEnrollmentDate())
+                        .enrollmentDate(course.getEnrollmentDate())
                         .status(course.getStatus())
                         .lecturerId(lecturerId)
-                        .lecturerName(lecturer.getUsername()
-                        ).lecturerEmail(
-                                lecturer.getEmail())
+                        .lecturerName(lecturer.getUsername())
+                        .lecturerEmail(lecturer.getEmail())
                         .lecturerPhoto(lecturer.getPhotoUrl())
                         .privacy(course.getPrivacy())
                         .build()

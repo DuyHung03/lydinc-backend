@@ -74,7 +74,8 @@ public class GoogleDriveService {
     // Get files in a specific folder and resolve shortcuts
     public String findSubfolderId(String parentFolderId, String subfolderName) throws IOException, GeneralSecurityException {
         Drive driveService = createDriveService();
-        String query = String.format("'%s' in parents and name = '%s' and mimeType = 'application/vnd.google-apps.folder'", parentFolderId, subfolderName);
+        String query = String.format("'%s' in parents and name contains '%s' and mimeType = 'application/vnd.google-apps.folder'",
+                parentFolderId, subfolderName);
 
         FileList result = driveService.files().list()
                 .setQ(query)
@@ -85,12 +86,13 @@ public class GoogleDriveService {
             return null; // Subfolder not found
         }
 
-        return result.getFiles().get(0).getId(); // Return the ID of the subfolder
+        return result.getFiles().get(0).getId(); // Return the ID of the first matching subfolder
     }
+
 
     public File findFileInFolder(String folderId, String fileName) throws IOException, GeneralSecurityException {
         Drive driveService = createDriveService();
-        String query = String.format("'%s' in parents and name = '%s'", folderId, fileName);
+        String query = String.format("'%s' in parents and name contains '%s'", folderId, fileName);
 
         FileList result = driveService.files().list()
                 .setQ(query)
@@ -101,7 +103,7 @@ public class GoogleDriveService {
             return null; // File not found
         }
 
-        return result.getFiles().get(0); // Return the file
+        return result.getFiles().get(0); // Return the first matching file
     }
 
     public Map<String, String> uploadFileAndReturnUrl(MultipartFile multipartFile) throws IOException, GeneralSecurityException {

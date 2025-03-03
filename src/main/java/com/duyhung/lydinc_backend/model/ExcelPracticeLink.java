@@ -16,8 +16,11 @@ public class ExcelPracticeLink {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-
     private String link;
-
     private String studentId;
+    private Integer courseId;
+    private String moduleId;
+    private String lessonId;
+    private Integer moduleIndex;
+    private Integer lessonIndex;
 }

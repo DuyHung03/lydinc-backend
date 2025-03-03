@@ -20,10 +20,15 @@ public class ExcelPracticeLinkController {
 
     @GetMapping("/get-practice-link")
     public ResponseEntity<?> getPracticeLink(
-            @RequestParam String moduleIndex,
-            @RequestParam String lessonIndex
+            @RequestParam Integer courseId,
+            @RequestParam String moduleId,
+            @RequestParam String lessonId,
+            @RequestParam Integer moduleIndex,
+            @RequestParam Integer lessonIndex
     ) throws GeneralSecurityException, IOException {
-        return ResponseEntity.ok(excelPracticeLinkService.getPracticeLink(moduleIndex, lessonIndex));
+        return ResponseEntity.ok(excelPracticeLinkService.getPracticeLink(
+                courseId, moduleId, lessonId, moduleIndex, lessonIndex
+        ));
     }
 
 }

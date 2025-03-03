@@ -20,11 +20,19 @@ public class ExcelPracticeLinkService {
     private final GoogleDriveService googleDriveService;
     private final UserRepository userRepository;
 
-    public String getPracticeLink(String moduleIndex, String lessonIndex) throws GeneralSecurityException, IOException {
+    public String getPracticeLink(
+            Integer courseId,
+            String moduleId,
+            String lessonId,
+            Integer moduleIndex,
+            Integer lessonIndex
+    ) throws GeneralSecurityException, IOException {
         String studentId = SecurityUtils.getUserIdFromAuthentication();
 
         // Fetch existing practice link
-        ExcelPracticeLink practiceLink = excelPracticeLinkRepository.findByStudentId(studentId);
+        ExcelPracticeLink practiceLink = excelPracticeLinkRepository.findByStudentId(
+                studentId, courseId, moduleId, lessonId
+        );
         if (practiceLink != null) {
             return practiceLink.getLink();
         }
@@ -35,39 +43,70 @@ public class ExcelPracticeLinkService {
         String rootFolderId;
         if (user.getUniversity() == null) {
             // If the user has no university, look inside "User" folder
-            rootFolderId = googleDriveService.findSubfolderId(googleDriveService.parentFolderId, "User");
-            if (rootFolderId == null) return null;
+            rootFolderId = googleDriveService.findSubfolderId(
+                    googleDriveService.parentFolderId,
+                    "User"
+            ); // type folder
+            if (rootFolderId == null) {
+                return null;
+            }
+            // Find User folder
+            rootFolderId = googleDriveService.findSubfolderId(rootFolderId, user.getUsername()); //username folder
 
-            rootFolderId = googleDriveService.findSubfolderId(rootFolderId, user.getUsername());
+            if (rootFolderId == null) {
+                return null;
+            }
         } else {
             // If the user has a university, look inside "University" folder
-            rootFolderId = googleDriveService.findSubfolderId(googleDriveService.parentFolderId, "University");
-            if (rootFolderId == null) return null;
+            rootFolderId = googleDriveService.findSubfolderId(
+                    googleDriveService.parentFolderId, "University"
+            ); // type folder
+            if (rootFolderId == null) {
+                return null;
+            }
 
-            rootFolderId = googleDriveService.findSubfolderId(rootFolderId, user.getUniversity().getShortName());
+            // Find University folder
+            rootFolderId = googleDriveService.findSubfolderId(
+                    rootFolderId, user.getUniversity().getShortName()
+            ); //university name folder
         }
-        if (rootFolderId == null) return null;
 
-        // Navigate to module and lesson folders
-        String moduleFolderId = googleDriveService.findSubfolderId(rootFolderId, moduleIndex);
-        if (moduleFolderId == null) return null;
+        // Find Course Folder (courseId)
+        String courseFolderId = googleDriveService.findSubfolderId(rootFolderId, courseId.toString());
+        if (courseFolderId == null) {
+            return null;
+        }
 
-        String lessonFolderId = googleDriveService.findSubfolderId(moduleFolderId, lessonIndex);
-        if (lessonFolderId == null) return null;
+        // Find Module Folder (moduleIndex)
+        String moduleFolderId = googleDriveService.findSubfolderId(courseFolderId, moduleIndex.toString());
+        if (moduleFolderId == null) {
+            return null;
+        }
 
-        // Find the file in the lesson folder
-        String fileName = user.getUsername() + "_" + moduleIndex + "." + lessonIndex + ".xlsx";
-        File userFile = googleDriveService.findFileInFolder(lessonFolderId, fileName);
-        if (userFile == null) return null;
+        // Find Lesson Folder (lessonIndex)
+        String lessonFolderId = googleDriveService.findSubfolderId(moduleFolderId, lessonIndex.toString());
+        if (lessonFolderId == null) {
+            return null;
+        }
 
-        // Create a new practice link entry
+        // Find the File in the Lesson Folder
+        String filePath = user.getUsername() + "_" + moduleIndex + "." + lessonIndex;
+        File userFile = googleDriveService.findFileInFolder(lessonFolderId, filePath);
+        if (userFile == null) {
+            return null;
+        }
+
+        // Save the practice link
         ExcelPracticeLink newPracticeLink = new ExcelPracticeLink();
         newPracticeLink.setStudentId(studentId);
+        newPracticeLink.setCourseId(courseId);
+        newPracticeLink.setModuleId(moduleId);
+        newPracticeLink.setLessonId(lessonId);
+        newPracticeLink.setModuleIndex(moduleIndex);
+        newPracticeLink.setLessonIndex(lessonIndex);
         newPracticeLink.setLink("https://docs.google.com/spreadsheets/d/" + userFile.getId());
         excelPracticeLinkRepository.save(newPracticeLink);
 
         return newPracticeLink.getLink();
     }
-
-
 }
