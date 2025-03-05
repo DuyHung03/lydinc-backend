@@ -8,7 +8,7 @@ import java.util.List;
 @Component
 public class RouteConfig {
     public static final List<String> PUBLIC_ROUTES = List.of(
-            "/auth/**", "/ws/**"
+            "/auth/**", "/ws/**", "/user/send-email-rp", "/user/change-password"
     );
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
 

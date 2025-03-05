@@ -2,13 +2,15 @@ package com.duyhung.lydinc_backend.service;
 
 import com.duyhung.lydinc_backend.model.Role;
 import com.duyhung.lydinc_backend.model.User;
+import com.duyhung.lydinc_backend.model.dto.PaginationResponse;
 import com.duyhung.lydinc_backend.model.dto.UserDto;
-import com.duyhung.lydinc_backend.model.dto.UserListResponse;
 import com.duyhung.lydinc_backend.repository.UserRepository;
+import com.duyhung.lydinc_backend.service.redis.RedisService;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -26,18 +28,22 @@ public class UserService extends AbstractService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final JwtService jwtService;
+    private final RedisService redisService;
 
-    public UserListResponse getAllAccounts(String adminId, int pageNo, int pageSize) {
+    @Value("${redis.reset-password-base-key}")
+    private String redisResetPwBaseKey;
+
+    public PaginationResponse<UserDto> getAllAccounts(String adminId, int pageNo, int pageSize) {
         Pageable pageable = PageRequest.of(pageNo, pageSize);
         Page<User> userPage = userRepository.findAllExceptCurrent(adminId, pageable);
         List<User> userList = userPage.getContent();
         List<UserDto> users = userList.stream().map(this::mapUserToDto).toList();
-        return UserListResponse.builder()
-                .users(users)
-                .total(userPage.getTotalPages())
-                .pageNo(pageNo + 1)
-                .pageSize(pageSize)
-                .build();
+        return new PaginationResponse<>(
+                users,
+                userPage.getTotalPages(),
+                pageNo + 1,
+                pageSize);
     }
 
     public UserDto getUserInfo(String userId) {
@@ -49,16 +55,25 @@ public class UserService extends AbstractService {
                         .map(Role::getRoleName)
                         .collect(Collectors.toSet()))
                 .isAccountGranted(user.getIsAccountGranted())
-                .isPasswordFirstChanged(user.getIsPasswordFirstChanged())
+                .isPasswordChanged(user.getIsPasswordChanged())
                 .universityId(user.getUniversity() != null ? user.getUniversity().getUniversityId() : null)
                 .universityName(user.getUniversity() != null ? user.getUniversity().getShortName() : null)
                 .build();
     }
 
-    public String changePassword(String userId, String newPassword) throws MessagingException {
-        // Find the user by ID
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    public String changePassword(String newPassword, String token) throws MessagingException {
+        if (!jwtService.verifyToken(token)) {
+            throw new RuntimeException("Invalid RP Token");
+        }
+        String username = jwtService.getUsername(token);
+        String key = redisResetPwBaseKey + username;
+        String redisToken = redisService.getCacheValue(key);
+        if (!token.equals(redisToken)) {
+            throw new RuntimeException("Invalid RP Token");
+        }
+
+        // Find the user by Username
+        User user = authorizeUserByUsername(username);
 
         // Check if the new password is the same as the old one
         if (passwordEncoder.matches(newPassword, user.getPassword())) {
@@ -68,10 +83,9 @@ public class UserService extends AbstractService {
         // Encode the new password
         String encodedPassword = passwordEncoder.encode(newPassword);
         user.setPassword(encodedPassword);
-        user.setIsPasswordFirstChanged(1);
         // Save the updated user
-        userRepository.save(user);
-
+        userRepository.saveNewPassword(encodedPassword, 1, user.getUserId());
+        redisService.deleteCache(key);
         emailService.sendEmailChangePassword(user.getEmail(), user.getUsername());
 
         return "Password changed successfully!";
@@ -93,4 +107,34 @@ public class UserService extends AbstractService {
             throw new RuntimeException("Error occurred while fetching users");
         }
     }
+
+    public String sendEmailResetPw(String username) throws MessagingException {
+        User user = authorizeUserByUsername(username);
+        if (user.getEmail() == null) {
+            throw new RuntimeException("Email for {} not found" + username);
+        }
+        String resetUrl = generateResetPasswordUrl(username);
+        emailService.sendLinkResetPassword(user.getEmail(), user.getUsername(), resetUrl);
+        return user.getEmail();
+    }
+
+    public String getResetPasswordUrl(String username) {
+        authorizeUserByUsername(username);
+        return generateResetPasswordUrl(username);
+    }
+
+    private String generateResetPasswordUrl(String username) {
+        String resetPwToken = jwtService.generateResetPasswordToken(username);
+        String key = redisResetPwBaseKey + username;
+        redisService.saveRPTokenToCache(key, resetPwToken);
+
+        return "http://localhost:5173/reset-password?token=" + resetPwToken;
+    }
+
+    private User authorizeUserByUsername(String username) {
+        return userRepository.checkUserExist(username).orElseThrow(
+                () -> new RuntimeException("Username not found")
+        );
+    }
+
 }

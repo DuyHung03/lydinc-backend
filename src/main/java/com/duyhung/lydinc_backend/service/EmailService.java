@@ -49,4 +49,31 @@ public class EmailService {
         mailSender.send(message);
     }
 
+    public void sendLinkResetPassword(String to, String username, String resetUrl) throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        message.setFrom(new InternetAddress("vkksieunhan2003@gmail.com"));
+        message.setRecipients(MimeMessage.RecipientType.TO, to);
+        message.setSubject("Reset Password");
+        String htmlContent = "<div style=\"font-family: Arial, sans-serif; line-height: 1.6; color: #333; border: 2px solid #2196F3; border-radius: 10px; padding: 20px; max-width: 600px; margin: 0 auto;\">\n" +
+                "    <p style=\"text-align: center; font-size: 18px; font-weight: bold; color: #2196f3;\">Password Reset Request</p>\n" +
+                "    <p>Hello <strong>" + username + "</strong>,</p>\n" +
+                "    <p>We received a request to reset your password. If you did not request this, please ignore this email.</p>\n" +
+                "    <p>To reset your password, please click the button below:</p>\n" +
+                "    <div style=\"text-align: center; margin: 20px 0;\">\n" +
+                "        <a href=\"" + resetUrl + "\" style=\"background-color: #2196F3; color: #fff; padding: 12px 20px; text-decoration: none; font-size: 16px; border-radius: 5px; display: inline-block;\">\n" +
+                "            Reset Password\n" +
+                "        </a>\n" +
+                "    </div>\n" +
+                "    <p>If the button above does not work, you can also use the following link:</p>\n" +
+                "    <p style=\"word-break: break-all;\"><a href=\"" + resetUrl + "\" style=\"color: #2196F3;\">" + resetUrl + "</a></p>\n" +
+                "    <p>This link will expire in <b>**5 minutes**</b>. Please reset your password before the link expires.</p>\n" +
+                "    <p style=\"color: #777; font-size: 14px;\">This is an automated email. Please do not reply to this message.</p>\n" +
+                "    <p>Best regards,</p>\n" +
+                "    <p style=\"font-weight: bold;\">LYDINC QA WEBSITE</p>\n" +
+                "</div>\n";
+        message.setContent(htmlContent, "text/html; charset=utf-8");
+
+        mailSender.send(message);
+    }
+
 }

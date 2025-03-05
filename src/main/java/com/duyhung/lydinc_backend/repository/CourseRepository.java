@@ -1,6 +1,8 @@
 package com.duyhung.lydinc_backend.repository;
 
 import com.duyhung.lydinc_backend.model.Course;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -17,7 +19,7 @@ public interface CourseRepository extends JpaRepository<Course, Integer> {
     @Query(value = "select c.courseId as courseId, c.privacy as privacy ,uc.user.userId as userId from Course c inner join UserCourse uc on c.courseId = uc.course.courseId and c.courseId = ?1")
     List<Object[]> findCoursePrivacyUser(Integer courseId);
 
-    Optional<List<Course>> findByLecturerId(String teacherId);
+    Optional<Page<Course>> findByLecturerId(String teacherId, Pageable pageable);
 
     @Query(value = "select new Course(c.courseId, c.title) from Course c join Enrollment e on c.courseId = e.course.courseId where e.university.universityId = ?1")
     List<Course> findByUniversityId(Integer universityId);

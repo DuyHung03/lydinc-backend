@@ -20,7 +20,7 @@ public class UserDto {
     private String phone;
     private String photoUrl;
     private String name;
-    private Integer isPasswordFirstChanged;
+    private Integer isPasswordChanged;
     private Integer isAccountGranted;
     private Set<String> roles;
     private Integer universityId;

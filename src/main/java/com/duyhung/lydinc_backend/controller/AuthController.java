@@ -37,7 +37,7 @@ public class AuthController {
             @RequestBody LoginRequest authRequest,
             HttpServletResponse response
     ) {
-        return ResponseEntity.ok(authService.login(authRequest, response));
+        return authService.login(authRequest, response);
     }
 
     @PostMapping("/refreshToken")

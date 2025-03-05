@@ -19,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -29,6 +30,7 @@ import org.springframework.stereotype.Service;
 import java.security.SecureRandom;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -45,6 +47,7 @@ public class AuthService extends AbstractService {
     private final UniversityRepository universityRepository;
     private final EmailService emailService;
     private final JwtService jwtService;
+    private final UserService userService;
 
     @Value("${jwt.accessToken-expiration}")
     private int ACCESS_TOKEN_EXPIRY_DATE;
@@ -56,8 +59,8 @@ public class AuthService extends AbstractService {
         requests.forEach(request -> {
             logger.info("Creating account for username: {}", request.getUsername());
 
-            String existingUser = userRepository.checkUserExist(request.getUsername());
-            if (existingUser != null) {
+            Optional<User> existingUser = userRepository.checkUserExist(request.getUsername());
+            if (existingUser.isPresent()) {
                 logger.error("User {} already exists", request.getUsername());
                 throw new RuntimeException("User " + request.getUsername() + " already exist!");
             }
@@ -76,7 +79,7 @@ public class AuthService extends AbstractService {
                     .phone(request.getPhone())
                     .password(passwordEncoder.encode(password))
                     .name(request.getFaculty())
-                    .isPasswordFirstChanged(0)
+                    .isPasswordChanged(0)
                     .isAccountGranted(1)
                     .university(university)
                     .roles(new HashSet<>())
@@ -99,7 +102,7 @@ public class AuthService extends AbstractService {
         return "Create account and send email successfully!";
     }
 
-    public boolean login(LoginRequest loginRequest, HttpServletResponse response) {
+    public ResponseEntity<?> login(LoginRequest loginRequest, HttpServletResponse response) {
         try {
             logger.info("Attempting login for username: {}", loginRequest.getUsername());
 
@@ -109,13 +112,16 @@ public class AuthService extends AbstractService {
                     ));
 
             User user = (User) authentication.getPrincipal();
+            if (user.getIsAccountGranted().equals(1) && user.getIsPasswordChanged().equals(0)) {
+                return ResponseEntity.ok(userService.getResetPasswordUrl(user.getUsername()));
+            }
             String accessToken = jwtUtils.generateAccessToken(user.getUsername(), user.getUserId());
             String refreshToken = jwtUtils.generateRefreshToken(user.getUsername(), user.getUserId());
 
             cookieUtils.setCookie("accessToken", accessToken, ACCESS_TOKEN_EXPIRY_DATE / 1000, response);
             cookieUtils.setCookie("refreshToken", refreshToken, REFRESH_TOKEN_EXPIRY_DATE / 1000, response);
             logger.info("User {} logged in successfully", user.getUsername());
-            return true;
+            return ResponseEntity.ok(true);
         } catch (BadCredentialsException e) {
             logger.error("Invalid login attempt for username: {}", loginRequest.getUsername());
             throw new AuthValidationException("Invalid username or password");
@@ -152,7 +158,6 @@ public class AuthService extends AbstractService {
         }
     }
 
-
     private String generateRandomPassword() {
         String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
         SecureRandom random = new SecureRandom();
@@ -171,8 +176,8 @@ public class AuthService extends AbstractService {
             String email,
             String phone
     ) {
-        String existingUser = userRepository.checkUserExist(username);
-        if (existingUser != null) {
+        Optional<User> existingUser = userRepository.checkUserExist(username);
+        if (existingUser.isPresent()) {
             logger.error("User {} already exists", username);
             throw new RuntimeException("User " + username + " already exist!");
         }
@@ -182,7 +187,7 @@ public class AuthService extends AbstractService {
                 .phone(phone)
                 .password(passwordEncoder.encode(password))
                 .name(fullName)
-                .isPasswordFirstChanged(0)
+                .isPasswordChanged(0)
                 .isAccountGranted(0)
                 .roles(new HashSet<>())
                 .build();

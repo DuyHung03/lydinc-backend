@@ -7,7 +7,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -30,7 +29,7 @@ public class User implements UserDetails {
     private String password;
     private String photoUrl;
     private String name;
-    private Integer isPasswordFirstChanged;
+    private Integer isPasswordChanged;
     private Integer isAccountGranted;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -44,6 +43,28 @@ public class User implements UserDetails {
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Set<Role> roles = new HashSet<>();
+
+    public User(
+            String userId,
+            String username,
+            String email,
+            String phone,
+            String password,
+            String photoUrl,
+            String name,
+            Integer isPasswordChanged,
+            Integer isAccountGranted
+    ) {
+        this.userId = userId;
+        this.username = username;
+        this.email = email;
+        this.phone = phone;
+        this.password = password;
+        this.photoUrl = photoUrl;
+        this.name = name;
+        this.isPasswordChanged = isPasswordChanged;
+        this.isAccountGranted = isAccountGranted;
+    }
 
     @Override
     public String getUsername() {

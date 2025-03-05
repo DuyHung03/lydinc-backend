@@ -34,9 +34,24 @@ public class UserController {
 
     @PostMapping("/change-password")
     public ResponseEntity<?> changePassword(
-            @RequestParam String newPassword
+            @RequestParam String newPassword,
+            @RequestParam String token
     ) throws MessagingException {
-        String userId = SecurityUtils.getUserIdFromAuthentication();
-        return ResponseEntity.ok(userService.changePassword(userId, newPassword));
+        return ResponseEntity.ok(userService.changePassword(newPassword, token));
     }
+
+    @PostMapping("/send-email-rp")
+    public ResponseEntity<?> sendEmailResetPassword(
+            @RequestParam String username
+    ) throws MessagingException {
+        return ResponseEntity.ok(userService.sendEmailResetPw(username));
+    }
+
+    @PostMapping("/get-rpw-url")
+    public ResponseEntity<?> getResetPasswordUrl(
+            @RequestParam String username
+    ) {
+        return ResponseEntity.ok(userService.getResetPasswordUrl(username));
+    }
+
 }

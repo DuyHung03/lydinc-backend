@@ -22,6 +22,8 @@ public class JwtService {
     private Long ACCESS_TOKEN_EXPIRY_DATE;
     @Value("${jwt.refreshToken-expiration}")
     private Long REFRESH_TOKEN_EXPIRY_DATE;
+    @Value("${jwt.reset-password-expiration}")
+    private Long RESET_PASSWORD_TOKEN_EXPIRY_DATE;
 
     private SecretKey getSecretKey() {
         SecretKey key = null;
@@ -49,6 +51,14 @@ public class JwtService {
                 .compact();
     }
 
+    public String generateResetPasswordToken(String username) {
+        return Jwts.builder()
+                .subject(username)
+                .expiration(new Date(System.currentTimeMillis() + RESET_PASSWORD_TOKEN_EXPIRY_DATE))
+                .signWith(getSecretKey())
+                .compact();
+    }
+
 
     public Claims getClaimsFromToken(String token) {
         return Jwts.parser()
@@ -64,18 +74,19 @@ public class JwtService {
 
     public boolean verifyToken(String token) {
         try {
+            boolean expiration = getClaimsFromToken(token).getExpiration().before(new Date());
             String username = getUsername(token);
-            return username != null && !username.isEmpty();
+            return !expiration && username != null && !username.isEmpty();
         } catch (SignatureException e) {
             throw new JwtValidationException("Invalid JWT signature.", e);
         } catch (MalformedJwtException e) {
-            throw new JwtValidationException("Invalid JWT token.", e);
+            throw new JwtValidationException("Invalid token.", e);
         } catch (ExpiredJwtException e) {
-            throw new JwtValidationException("JWT token is expired.", e);
+            throw new JwtValidationException("Token is expired.", e);
         } catch (UnsupportedJwtException e) {
-            throw new JwtValidationException("JWT token is unsupported.", e);
+            throw new JwtValidationException("Token is unsupported.", e);
         } catch (IllegalArgumentException e) {
-            throw new JwtValidationException("JWT claims string is empty.", e);
+            throw new JwtValidationException("Claims string is empty.", e);
         }
     }
 

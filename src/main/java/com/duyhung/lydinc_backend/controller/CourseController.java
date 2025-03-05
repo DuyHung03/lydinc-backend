@@ -28,9 +28,12 @@ public class CourseController {
     }
 
     @GetMapping("/courses-by-lecturer")
-    public ResponseEntity<?> getCourseByLecturer() {
+    public ResponseEntity<?> getCourseByLecturer(
+            @RequestParam int pageNo,
+            @RequestParam int pageSize
+    ) {
         String lecturerId = SecurityUtils.getUserIdFromAuthentication();
-        return ResponseEntity.ok(courseService.getCourseByLecturer(lecturerId));
+        return ResponseEntity.ok(courseService.getCourseByLecturer(lecturerId, pageNo, pageSize));
     }
 
     @GetMapping("/courses-by-student")

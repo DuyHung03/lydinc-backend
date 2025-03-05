@@ -6,20 +6,22 @@ import com.duyhung.lydinc_backend.model.User;
 import com.duyhung.lydinc_backend.model.dto.CourseDto;
 import com.duyhung.lydinc_backend.model.dto.CoursePrivacy;
 import com.duyhung.lydinc_backend.model.dto.ModuleDto;
+import com.duyhung.lydinc_backend.model.dto.PaginationResponse;
 import com.duyhung.lydinc_backend.repository.CourseRepository;
-import com.duyhung.lydinc_backend.repository.EnrollmentRepository;
 import com.duyhung.lydinc_backend.repository.ModuleRepository;
 import com.duyhung.lydinc_backend.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -32,13 +34,14 @@ public class CourseService extends AbstractService {
     private final ModuleRepository moduleRepository;
     private final EnrollmentService enrollmentService;
 
-    public List<CourseDto> getCourseByLecturer(String lecturerId) {
+    public PaginationResponse<CourseDto> getCourseByLecturer(String lecturerId, int pageNo, int pageSize) {
         logger.info("Fetching courses for lecturer with ID '{}'", lecturerId);
-        List<Course> courses = courseRepository.findByLecturerId(lecturerId).orElseThrow(() -> {
+        Pageable pageable = PageRequest.of(pageNo, pageSize);
+        Page<Course> coursesPage = courseRepository.findByLecturerId(lecturerId, pageable).orElseThrow(() -> {
             logger.warn("No courses found for lecturer '{}'", lecturerId);
             return new RuntimeException("Course not found");
         });
-
+        List<Course> courses = coursesPage.getContent();
         User lecturer = userRepository.findById(lecturerId).orElseThrow(() -> {
             logger.warn("Lecturer '{}' not found", lecturerId);
             return new RuntimeException("Lecturer not found");
@@ -46,7 +49,7 @@ public class CourseService extends AbstractService {
 
         logger.info("Found {} courses for lecturer '{}'", courses.size(), lecturerId);
 
-        return courses.stream().map(
+        List<CourseDto> courseDtos = courses.stream().map(
                 course -> CourseDto.builder()
                         .courseId(course.getCourseId())
                         .title(course.getTitle())
@@ -58,7 +61,13 @@ public class CourseService extends AbstractService {
                         .lecturerPhoto(lecturer.getPhotoUrl())
                         .privacy(course.getPrivacy())
                         .build()
-        ).collect(Collectors.toList());
+        ).toList();
+        return new PaginationResponse<>(
+                courseDtos,
+                coursesPage.getTotalPages(),
+                pageNo + 1,
+                pageSize
+        );
     }
 
     public List<Course> getCourseByStudent(String studentId, Integer universityId) {
