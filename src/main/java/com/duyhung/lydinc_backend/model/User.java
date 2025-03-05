@@ -22,7 +22,6 @@ public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String userId;
-
     private String username;
     private String email;
     private String phone;
@@ -31,6 +30,7 @@ public class User implements UserDetails {
     private String name;
     private Integer isPasswordChanged;
     private Integer isAccountGranted;
+    private String universityName;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "university_id", nullable = true)

@@ -15,8 +15,10 @@ import java.util.Optional;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, String> {
-    @Query(value = "select u from User u inner join u.roles r where r.roleId = 1 and u.university.universityId is null ")
-    List<User> findAllStudent();
+//    @Query(value = "select u " +
+//            "from User u left join UserRoles ur on ur.userId = u.userId " +
+//            "where ur.roleId = ?1")
+//    List<User> findAllByRole(Integer roleId);
 
     Optional<User> findByUsername(String username);
 
@@ -35,11 +37,14 @@ public interface UserRepository extends JpaRepository<User, String> {
 
     Optional<List<User>> findByUniversityUniversityId(Integer id);
 
-    @Query("select u from User u where u.userId <> :currentId ")
-    Page<User> findAllExceptCurrent(@Param("currentId") String currentId, Pageable pageable);
+    @Query("SELECT u FROM User u " +
+            "LEFT JOIN UserRoles ur ON u.userId = ur.userId " +
+            "LEFT JOIN University uni ON uni.universityId = u.university.universityId " +
+            "WHERE ur.roleId = 1 " +
+            "AND (:universityId IS NULL OR uni.universityId = :universityId)")
+    Page<User> findAllExceptCurrent(@Param("universityId") Integer universityId, Pageable pageable);
 
     @Modifying
-    @Transactional
     @Query("UPDATE User u SET u.password = ?1, u.isPasswordChanged = ?2 WHERE u.userId = ?3")
     void saveNewPassword(String newPassword, Integer isPasswordChanged, String userId);
 

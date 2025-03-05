@@ -22,15 +22,19 @@ public class UserController {
     }
 
     @GetMapping("/get-all")
-    public ResponseEntity<?> getAllAccounts(@RequestParam int pageNo, @RequestParam int pageSize) {
-        String userId = SecurityUtils.getUserIdFromAuthentication();
-        return ResponseEntity.ok(userService.getAllAccounts(userId, pageNo, pageSize));
+    public ResponseEntity<?> getAllAccounts(
+            @RequestParam Integer universityId,
+            @RequestParam Integer orderBy,
+            @RequestParam int pageNo,
+            @RequestParam int pageSize
+    ) {
+        return ResponseEntity.ok(userService.getAllAccounts(universityId, orderBy, pageNo, pageSize));
     }
 
-    @GetMapping("/get-all-student")
-    public ResponseEntity<?> getAllStudents() {
-        return ResponseEntity.ok(userService.getAllStudents());
-    }
+//    @GetMapping("/get-all-students")
+//    public ResponseEntity<?> getAllStudents() {
+//        return ResponseEntity.ok(userService.getAllStudents());
+//    }
 
     @PostMapping("/change-password")
     public ResponseEntity<?> changePassword(
