@@ -14,5 +14,7 @@ import java.util.List;
 public class UpdateModuleRequest {
     Integer courseId;
     String title;
+    private String description;
+    private String thumbnail;
     List<ModuleDto> modules;
 }

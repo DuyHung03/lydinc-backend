@@ -21,10 +21,10 @@ public interface CourseRepository extends JpaRepository<Course, Integer> {
 
     Optional<Page<Course>> findByLecturerId(String teacherId, Pageable pageable);
 
-    @Query(value = "select new Course(c.courseId, c.title) from Course c join Enrollment e on c.courseId = e.course.courseId where e.university.universityId = ?1")
+    @Query(value = "select new Course(c.courseId, c.title, c.description,c.thumbnail,c.status) from Course c join Enrollment e on c.courseId = e.course.courseId where e.university.universityId = ?1")
     List<Course> findByUniversityId(Integer universityId);
 
-    @Query(value = "select new Course(c.courseId, c.title) from Course c join UserCourse uc on c.courseId = uc.course.courseId where uc.user.userId = ?1")
+    @Query(value = "select new Course(c.courseId, c.title, c.description,c.thumbnail,c.status) from Course c join UserCourse uc on c.courseId = uc.course.courseId where uc.user.userId = ?1")
     List<Course> findByUserId(String userId);
 
     @Query(value = "select case when count (c) > 0 then true else false end from Course c where c.lecturerId = ?1 and c.courseId = ?2")

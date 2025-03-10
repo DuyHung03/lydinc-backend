@@ -1,6 +1,5 @@
 package com.duyhung.lydinc_backend.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -24,7 +23,9 @@ public class Course {
     private Integer courseId;
 
     private String title;
-
+    @Column(columnDefinition = "TEXT")
+    private String description;
+    private String thumbnail;
     private LocalDate enrollmentDate;
     private String status = "ACTIVE";
     private String privacy;
@@ -42,9 +43,17 @@ public class Course {
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Module> modules;
 
-    private Course(Integer courseId, String title) {
+    public Course(
+            Integer courseId,
+            String title,
+            String description,
+            String thumbnail,
+            String status
+    ) {
         this.courseId = courseId;
         this.title = title;
+        this.description = description;
+        this.thumbnail = thumbnail;
+        this.status = status;
     }
-
 }

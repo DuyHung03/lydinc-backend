@@ -13,5 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 public class NewCourseRequest {
     private String title;
+    private String description;
+    private String thumbnail;
     private List<ModuleDto> modules;
 }

@@ -7,6 +7,7 @@ import com.duyhung.lydinc_backend.model.dto.UserDto;
 import com.duyhung.lydinc_backend.repository.UserRepository;
 import com.duyhung.lydinc_backend.service.redis.RedisService;
 import jakarta.mail.MessagingException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -61,6 +62,7 @@ public class UserService extends AbstractService {
                 .build();
     }
 
+    @Transactional
     public String changePassword(String newPassword, String token) throws MessagingException {
         if (!jwtService.verifyToken(token)) {
             throw new RuntimeException("Invalid RP Token");

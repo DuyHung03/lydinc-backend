@@ -1,4 +1,4 @@
-package com.duyhung.lydinc_backend.config;
+package com.duyhung.lydinc_backend.config.kafka;
 
 import org.apache.kafka.clients.admin.NewTopic;
 import org.springframework.context.annotation.Bean;
@@ -10,8 +10,8 @@ public class KafkaConfig {
     @Bean
     public NewTopic notificationTopic() {
         return TopicBuilder.name("notification-topic")
-                .partitions(3)
-                .replicas(3)
+                .partitions(1)
+                .replicas(1)
                 .build();
     }
 }
