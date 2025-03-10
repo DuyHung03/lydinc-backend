@@ -1,4 +1,4 @@
-package com.duyhung.lydinc_backend.config;
+package com.duyhung.lydinc_backend.config.websocket;
 
 import com.duyhung.lydinc_backend.websocket.NotificationWebSocketHandler;
 import lombok.RequiredArgsConstructor;

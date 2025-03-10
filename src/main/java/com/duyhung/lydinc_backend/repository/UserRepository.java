@@ -1,7 +1,6 @@
 package com.duyhung.lydinc_backend.repository;
 
 import com.duyhung.lydinc_backend.model.User;
-import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

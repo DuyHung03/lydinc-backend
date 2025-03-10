@@ -1,7 +1,6 @@
 package com.duyhung.lydinc_backend.repository;
 
 import com.duyhung.lydinc_backend.model.Module;
-import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -19,7 +18,6 @@ public interface ModuleRepository extends JpaRepository<Module, String> {
     Optional<String> findByModuleId(String moduleId);
 
     @Modifying
-    @Transactional
     @Query(value = "delete from Module m where m.moduleId = ?1")
     void deleteByModuleId(String moduleId);
 

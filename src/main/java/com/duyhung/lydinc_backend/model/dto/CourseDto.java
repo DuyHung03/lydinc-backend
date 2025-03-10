@@ -23,5 +23,7 @@ public class CourseDto {
     private String lecturerEmail;
     private String lecturerPhoto;
     private String practiceLink;
+    private String description;
+    private String thumbnail;
     private List<EnrollmentDto> enrollments;
 }

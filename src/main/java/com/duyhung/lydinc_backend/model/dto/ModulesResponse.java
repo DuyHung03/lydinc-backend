@@ -14,5 +14,7 @@ import java.util.List;
 public class ModulesResponse {
     private Integer courseId;
     private String courseTitle;
+    private String description;
+    private String thumbnail;
     private List<ModuleDto> modules;
 }

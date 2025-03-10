@@ -18,7 +18,12 @@ public class CourseController {
     @PostMapping("/new-course")
     public ResponseEntity<?> createNewCourse(@RequestBody NewCourseRequest request) {
         String lecturerId = SecurityUtils.getUserIdFromAuthentication();
-        return ResponseEntity.ok(courseService.createNewCourse(request.getTitle(), request.getModules(), lecturerId));
+        return ResponseEntity.ok(courseService.createNewCourse(
+                request.getTitle(),
+                request.getModules(),
+                request.getDescription(),
+                request.getThumbnail(),
+                lecturerId));
     }
 
     @PostMapping("/edit-privacy")

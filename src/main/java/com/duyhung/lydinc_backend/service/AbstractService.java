@@ -12,20 +12,6 @@ import java.util.stream.Collectors;
 
 @Service
 public abstract class AbstractService {
-    public CourseDto mapToCourseDto(Enrollment enrollment) {
-        return CourseDto.builder().courseId(enrollment.getCourse().getCourseId()).title(enrollment.getCourse().getTitle()).status(enrollment.getCourse().getStatus()).enrollmentDate(enrollment.getEnrollmentDate()).lecturerId(enrollment.getCourse().getLecturerId()).lecturerEmail(enrollment.getCourse().getLecturerEmail()).lecturerName(enrollment.getCourse().getLecturerName()).lecturerPhoto(enrollment.getCourse().getLecturerPhoto()).build();
-    }
-
-
-    public List<EnrollmentDto> mapEnrollmentsToDtos(List<Enrollment> enrollments) {
-        return enrollments.stream().map(this::mapEnrollmentToDto).collect(Collectors.toList());
-    }
-
-    public EnrollmentDto mapEnrollmentToDto(Enrollment enrollment) {
-        return EnrollmentDto.builder().enrollmentId(enrollment.getEnrollmentId()).enrollmentDate(enrollment.getEnrollmentDate()).university(mapToUniversityDto(enrollment.getUniversity()))
-                .build();
-    }
-
     public UniversityDto mapToUniversityDto(University university) {
         return UniversityDto.builder()
                 .universityId(university.getUniversityId())
@@ -61,5 +47,4 @@ public abstract class AbstractService {
                 .fileName(lesson.getFileName())
                 .build();
     }
-
 }

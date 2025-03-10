@@ -53,6 +53,8 @@ public class CourseService extends AbstractService {
                 course -> CourseDto.builder()
                         .courseId(course.getCourseId())
                         .title(course.getTitle())
+                        .description(course.getDescription())
+                        .thumbnail(course.getThumbnail())
                         .enrollmentDate(course.getEnrollmentDate())
                         .status(course.getStatus())
                         .lecturerId(lecturerId)
@@ -89,13 +91,20 @@ public class CourseService extends AbstractService {
     public String createNewCourse(
             String title,
             List<ModuleDto> modules,
+            String description,
+            String thumbnail,
             String lecturerId
     ) {
         logger.info("Creating a new course with title '{}' for lecturer '{}'", title, lecturerId);
 
         // Save course
         Course course = courseRepository.save(
-                Course.builder().title(title).lecturerId(lecturerId).privacy("public")
+                Course.builder()
+                        .title(title)
+                        .lecturerId(lecturerId)
+                        .privacy("public")
+                        .description(description)
+                        .thumbnail(thumbnail)
                         .build()
         );
 

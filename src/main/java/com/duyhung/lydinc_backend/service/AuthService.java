@@ -15,6 +15,7 @@ import io.jsonwebtoken.Claims;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -55,6 +56,7 @@ public class AuthService extends AbstractService {
     @Value("${jwt.refreshToken-expiration}")
     private int REFRESH_TOKEN_EXPIRY_DATE;
 
+    @Transactional
     public String createAccount(List<RegisterRequest> requests) {
         requests.forEach(request -> {
             logger.info("Creating account for username: {}", request.getUsername());

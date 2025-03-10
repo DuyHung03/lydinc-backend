@@ -40,7 +40,12 @@ public class ModuleService {
             List<ModuleDto> moduleDtos = modules.stream().map(module -> ModuleDto.builder().moduleId(module.getModuleId()).moduleTitle(module.getModuleTitle()).level(module.getLevel()).index(module.getIndex()).parentModuleId(module.getParentModuleId()).status(module.getStatus()).courseId(courseId).build()).toList();
 
             logger.info("Successfully fetched {} modules for course ID: {}", moduleDtos.size(), courseId);
-            return ModulesResponse.builder().courseId(courseId).courseTitle(course.getTitle()).modules(moduleDtos).build();
+            return ModulesResponse.builder()
+                    .courseId(courseId)
+                    .courseTitle(course.getTitle())
+                    .description(course.getDescription())
+                    .thumbnail(course.getThumbnail())
+                    .modules(moduleDtos).build();
 
         } catch (Exception e) {
             logger.error("Failed to retrieve modules for course ID: {}", courseId, e);
@@ -63,6 +68,8 @@ public class ModuleService {
             if (request.getTitle() != null) {
                 logger.info("Updating course title to '{}'", request.getTitle());
                 course.setTitle(request.getTitle());
+                course.setDescription(request.getDescription());
+                course.setThumbnail(request.getThumbnail());
                 courseRepository.save(course);
             }
 
