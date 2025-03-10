@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -35,9 +36,17 @@ public class UserService extends AbstractService {
     @Value("${redis.reset-password-base-key}")
     private String redisResetPwBaseKey;
 
-    public PaginationResponse<UserDto> getAllAccounts(String adminId, int pageNo, int pageSize) {
-        Pageable pageable = PageRequest.of(pageNo, pageSize);
-        Page<User> userPage = userRepository.findAllExceptCurrent(adminId, pageable);
+    public PaginationResponse<UserDto> getAllAccounts(Integer universityId, Integer orderBy, int pageNo, int pageSize) {
+        Sort sort = Sort.unsorted();
+        if (orderBy != null) {
+            if (orderBy == 1) {
+                sort = Sort.by(Sort.Direction.ASC, "username");
+            } else if (orderBy == 2) {
+                sort = Sort.by(Sort.Direction.DESC, "username");
+            }
+        }
+        Pageable pageable = PageRequest.of(pageNo, pageSize, sort);
+        Page<User> userPage = userRepository.findAllExceptCurrent(universityId, pageable);
         List<User> userList = userPage.getContent();
         List<UserDto> users = userList.stream().map(this::mapUserToDto).toList();
         return new PaginationResponse<>(
@@ -93,22 +102,22 @@ public class UserService extends AbstractService {
         return "Password changed successfully!";
     }
 
-    public List<UserDto> getAllStudents() {
-        try {
-            logger.info("Fetching all students from database");
-            List<User> users = userRepository.findAllStudent();
-            logger.info("Found {} students", users.size());
-
-            return users.stream().map(user -> UserDto.builder()
-                    .userId(user.getUserId())
-                    .username(user.getUsername())
-                    .email(user.getEmail())
-                    .build()).collect(Collectors.toList());
-        } catch (Exception e) {
-            logger.error("Error occurred while fetching students: {}", e.getMessage(), e);
-            throw new RuntimeException("Error occurred while fetching users");
-        }
-    }
+//    public List<UserDto> getAllStudents() {
+//        try {
+//            logger.info("Fetching all students from database");
+//            List<User> users = userRepository.findAllByRole(1);
+//            logger.info("Found {} students", users.size());
+//
+//            return users.stream().map(user -> UserDto.builder()
+//                    .userId(user.getUserId())
+//                    .username(user.getUsername())
+//                    .email(user.getEmail())
+//                    .build()).collect(Collectors.toList());
+//        } catch (Exception e) {
+//            logger.error("Error occurred while fetching students: {}", e.getMessage(), e);
+//            throw new RuntimeException("Error occurred while fetching users");
+//        }
+//    }
 
     public String sendEmailResetPw(String username) throws MessagingException {
         User user = authorizeUserByUsername(username);
