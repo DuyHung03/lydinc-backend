@@ -36,7 +36,8 @@ public class UserService extends AbstractService {
     @Value("${redis.reset-password-base-key}")
     private String redisResetPwBaseKey;
 
-    public PaginationResponse<UserDto> getAllAccounts(Integer universityId, Integer orderBy, int pageNo, int pageSize) {
+    public PaginationResponse<UserDto> getAllAccounts(String searchValue, Integer universityId, Integer orderBy, int pageNo, int pageSize) {
+        // Determine sorting order
         Sort sort = Sort.unsorted();
         if (orderBy != null) {
             if (orderBy == 1) {
@@ -45,16 +46,28 @@ public class UserService extends AbstractService {
                 sort = Sort.by(Sort.Direction.DESC, "username");
             }
         }
-        Pageable pageable = PageRequest.of(pageNo, pageSize, sort);
-        Page<User> userPage = userRepository.findAllExceptCurrent(universityId, pageable);
-        List<User> userList = userPage.getContent();
-        List<UserDto> users = userList.stream().map(this::mapUserToDto).toList();
+
+        Pageable pageable = PageRequest.of(pageNo, pageSize);
+        Page<User> userPage;
+
+        if (searchValue != null) {
+            userPage = userRepository.searchByUsername(searchValue, pageable);
+        } else if (universityId == null) {
+            userPage = userRepository.findAllStudents(pageable);
+        } else {
+            userPage = userRepository.findByUniversityId(universityId, pageable);
+        }
+
+        List<UserDto> users = userPage.getContent().stream().map(this::mapUserToDto).toList();
+
         return new PaginationResponse<>(
                 users,
                 userPage.getTotalPages(),
                 pageNo + 1,
-                pageSize);
+                pageSize
+        );
     }
+
 
     public UserDto getUserInfo(String userId) {
         User user = userRepository.findById(userId)
@@ -102,22 +115,22 @@ public class UserService extends AbstractService {
         return "Password changed successfully!";
     }
 
-//    public List<UserDto> getAllStudents() {
-//        try {
-//            logger.info("Fetching all students from database");
-//            List<User> users = userRepository.findAllByRole(1);
-//            logger.info("Found {} students", users.size());
-//
-//            return users.stream().map(user -> UserDto.builder()
-//                    .userId(user.getUserId())
-//                    .username(user.getUsername())
-//                    .email(user.getEmail())
-//                    .build()).collect(Collectors.toList());
-//        } catch (Exception e) {
-//            logger.error("Error occurred while fetching students: {}", e.getMessage(), e);
-//            throw new RuntimeException("Error occurred while fetching users");
-//        }
-//    }
+    public List<UserDto> getAllStudents() {
+        try {
+            logger.info("Fetching all students from database");
+            List<User> users = userRepository.findStudentsWithoutUniversity();
+            logger.info("Found {} students", users.size());
+
+            return users.stream().map(user -> UserDto.builder()
+                    .userId(user.getUserId())
+                    .username(user.getUsername())
+                    .email(user.getEmail())
+                    .build()).collect(Collectors.toList());
+        } catch (Exception e) {
+            logger.error("Error occurred while fetching students: {}", e.getMessage(), e);
+            throw new RuntimeException("Error occurred while fetching users");
+        }
+    }
 
     public String sendEmailResetPw(String username) throws MessagingException {
         User user = authorizeUserByUsername(username);
