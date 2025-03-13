@@ -47,7 +47,7 @@ public class SecurityConfig {
                             .requestMatchers(HttpMethod.GET, "/courses/**").hasAnyAuthority("LECTURER", "STUDENT")
                             .requestMatchers(HttpMethod.POST, "/school/**").hasAnyAuthority("LECTURER", "ADMIN")
                             .requestMatchers(HttpMethod.GET, "/school/**").hasAnyAuthority("LECTURER", "STUDENT")
-                            .requestMatchers(HttpMethod.POST, "/admin/**").hasAnyAuthority("ADMIN")
+                            .requestMatchers("/admin/**").hasAnyAuthority("ADMIN")
                             .anyRequest().authenticated();
                 })
                 .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

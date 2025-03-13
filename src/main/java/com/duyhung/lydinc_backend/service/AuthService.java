@@ -45,8 +45,6 @@ public class AuthService extends AbstractService {
     private final JwtService jwtUtils;
     private final CookieUtils cookieUtils;
     private final AuthenticationManager authenticationManager;
-    private final UniversityRepository universityRepository;
-    private final EmailService emailService;
     private final JwtService jwtService;
     private final UserService userService;
 
@@ -55,54 +53,6 @@ public class AuthService extends AbstractService {
 
     @Value("${jwt.refreshToken-expiration}")
     private int REFRESH_TOKEN_EXPIRY_DATE;
-
-    @Transactional
-    public String createAccount(List<RegisterRequest> requests) {
-        requests.forEach(request -> {
-            logger.info("Creating account for username: {}", request.getUsername());
-
-            Optional<User> existingUser = userRepository.checkUserExist(request.getUsername());
-            if (existingUser.isPresent()) {
-                logger.error("User {} already exists", request.getUsername());
-                throw new RuntimeException("User " + request.getUsername() + " already exist!");
-            }
-
-            University university = universityRepository.findById(request.getUniversityId())
-                    .orElseThrow(() -> {
-                        logger.error("University with ID {} not found", request.getUniversityId());
-                        return new RuntimeException("University not found");
-                    });
-
-            String password = request.getPassword() == null ? generateRandomPassword() : request.getPassword();
-
-            User user = User.builder()
-                    .username(request.getUsername())
-                    .email(request.getEmail())
-                    .phone(request.getPhone())
-                    .password(passwordEncoder.encode(password))
-                    .name(request.getFaculty())
-                    .isPasswordChanged(0)
-                    .isAccountGranted(1)
-                    .university(university)
-                    .roles(new HashSet<>())
-                    .build();
-
-            Role userRole = roleRepository.findByRoleId(1);
-            user.getRoles().add(userRole);
-
-            userRepository.save(user);
-            logger.info("User {} registered successfully", request.getUsername());
-
-            try {
-                emailService.sendEmailAccountGranted(request.getEmail(), request.getUsername(), password);
-                logger.info("Account creation email sent to {}", request.getEmail());
-            } catch (MessagingException e) {
-                logger.error("Error sending email to {}: {}", request.getEmail(), e.getMessage(), e);
-                throw new RuntimeException(e);
-            }
-        });
-        return "Create account and send email successfully!";
-    }
 
     public ResponseEntity<?> login(LoginRequest loginRequest, HttpServletResponse response) {
         try {
@@ -120,8 +70,8 @@ public class AuthService extends AbstractService {
             String accessToken = jwtUtils.generateAccessToken(user.getUsername(), user.getUserId());
             String refreshToken = jwtUtils.generateRefreshToken(user.getUsername(), user.getUserId());
 
-            cookieUtils.setCookie("accessToken", accessToken, ACCESS_TOKEN_EXPIRY_DATE / 1000, response);
-            cookieUtils.setCookie("refreshToken", refreshToken, REFRESH_TOKEN_EXPIRY_DATE / 1000, response);
+            cookieUtils.setCookie("accessToken", accessToken, ACCESS_TOKEN_EXPIRY_DATE / 1000, response, "/");
+            cookieUtils.setCookie("refreshToken", refreshToken, REFRESH_TOKEN_EXPIRY_DATE / 1000, response, "auth/refreshToken");
             logger.info("User {} logged in successfully", user.getUsername());
             return ResponseEntity.ok(true);
         } catch (BadCredentialsException e) {
@@ -150,7 +100,7 @@ public class AuthService extends AbstractService {
             String newAccessToken = jwtService.generateAccessToken(username, userId);
 
             // Set new access token in cookies
-            cookieUtils.setCookie("accessToken", newAccessToken, 86400, response);
+            cookieUtils.setCookie("accessToken", newAccessToken, 86400, response, "/");
 
             logger.info("Token refreshed successfully");
             return "Refresh token successfully!";
@@ -158,17 +108,6 @@ public class AuthService extends AbstractService {
             logger.error("Token refresh failed: {}", e.getMessage());
             throw new RuntimeException(e.getMessage());
         }
-    }
-
-    private String generateRandomPassword() {
-        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
-        SecureRandom random = new SecureRandom();
-        StringBuilder password = new StringBuilder(12);
-        for (int i = 0; i < 12; i++) {
-            password.append(chars.charAt(random.nextInt(chars.length())));
-        }
-        logger.debug("Generated random password");
-        return password.toString();
     }
 
     public String register(

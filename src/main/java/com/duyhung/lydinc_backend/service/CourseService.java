@@ -7,9 +7,7 @@ import com.duyhung.lydinc_backend.model.dto.CourseDto;
 import com.duyhung.lydinc_backend.model.dto.CoursePrivacy;
 import com.duyhung.lydinc_backend.model.dto.ModuleDto;
 import com.duyhung.lydinc_backend.model.dto.PaginationResponse;
-import com.duyhung.lydinc_backend.repository.CourseRepository;
-import com.duyhung.lydinc_backend.repository.ModuleRepository;
-import com.duyhung.lydinc_backend.repository.UserRepository;
+import com.duyhung.lydinc_backend.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
@@ -33,6 +31,10 @@ public class CourseService extends AbstractService {
     private final UserRepository userRepository;
     private final ModuleRepository moduleRepository;
     private final EnrollmentService enrollmentService;
+    private final EnrollmentRepository enrollmentRepository;
+    private final UserCourseRepository userCourseRepository;
+    private final LessonRepository lessonRepository;
+    private final ExcelPracticeLinkRepository excelPracticeLinkRepository;
 
     public PaginationResponse<CourseDto> getCourseByLecturer(String lecturerId, int pageNo, int pageSize) {
         logger.info("Fetching courses for lecturer with ID '{}'", lecturerId);
@@ -193,5 +195,20 @@ public class CourseService extends AbstractService {
                 .universityIds(universityIds)
                 .userIds(userIds)
                 .build();
+    }
+
+    @Transactional
+    public void deleteCourse(Integer courseId) {
+        //delete at enrollment
+        enrollmentRepository.deleteByCourseId(courseId);
+        userCourseRepository.deleteAllByCourseId(courseId);
+        //delete at lessons
+        lessonRepository.deleteLessonByCourseId(courseId);
+        //delete at module
+        moduleRepository.deleteByCourseId(courseId);
+        //delete at link
+        excelPracticeLinkRepository.deleteExcelPracticeLinkByCourseId(courseId);
+        //delete at course
+        courseRepository.deleteById(courseId);
     }
 }

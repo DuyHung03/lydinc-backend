@@ -54,4 +54,11 @@ public class CourseController {
         return ResponseEntity.ok(courseService.getCoursePrivacy(courseId));
     }
 
+    @DeleteMapping("/delete")
+    public ResponseEntity<?> deleteCourse(@RequestParam Integer courseId) {
+        courseService.deleteCourse(courseId);
+        return ResponseEntity.ok("Delete successfully!");
+    }
+
+
 }

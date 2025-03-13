@@ -25,7 +25,7 @@ public class AuthController {
     ) {
         return ResponseEntity.ok(authService.register(
                 request.getUsername(),
-                request.getFullName(),
+                request.getName(),
                 request.getPassword(),
                 request.getEmail(),
                 request.getPhone()

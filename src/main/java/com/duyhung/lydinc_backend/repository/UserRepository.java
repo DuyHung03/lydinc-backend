@@ -13,11 +13,6 @@ import java.util.Optional;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, String> {
-//    @Query(value = "select u " +
-//            "from User u left join UserRoles ur on ur.userId = u.userId " +
-//            "where ur.roleId = ?1")
-//    List<User> findAllByRole(Integer roleId);
-
     Optional<User> findByUsername(String username);
 
     @Query(value = "select new User (" +
@@ -35,12 +30,6 @@ public interface UserRepository extends JpaRepository<User, String> {
 
     Optional<List<User>> findByUniversityUniversityId(Integer id);
 
-    //    @Query(value = "SELECT * FROM users " +
-//            "LEFT JOIN user_roles ON users.user_id = user_roles.user_id " +
-//            "LEFT JOIN university ON university.university_id = users.university_id " +
-//            "WHERE user_roles.role_id = 1 " +
-//            "AND (?1 IS NULL OR university.university_id = ?1)", nativeQuery = true)
-//    Page<User> findAllExceptCurrent(Integer universityId, Pageable pageable);
     @Query(value = "select users.* from users " +
             "left join user_roles on users.user_id = user_roles.user_id " +
             "where user_roles.role_id = 1", nativeQuery = true)
@@ -64,6 +53,12 @@ public interface UserRepository extends JpaRepository<User, String> {
             "where user_roles.role_id = 1 " +
             "and users.university_id is null ", nativeQuery = true)
     List<User> findStudentsWithoutUniversity();
+
+    @Query(value = "select users.* from users " +
+            "left join user_roles on users.user_id = user_roles.user_id " +
+            "where user_roles.role_id = 2 ", nativeQuery = true)
+    List<User> findAllLecturers();
+
 
     @Modifying
     @Query("UPDATE User u SET u.password = ?1, u.isPasswordChanged = ?2 WHERE u.userId = ?3")

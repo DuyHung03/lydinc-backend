@@ -21,4 +21,8 @@ public interface ModuleRepository extends JpaRepository<Module, String> {
     @Query(value = "delete from Module m where m.moduleId = ?1")
     void deleteByModuleId(String moduleId);
 
+    @Modifying
+    @Query(value = "delete from Module m where m.course.courseId = ?1")
+    void deleteByCourseId(Integer courseId);
+
 }

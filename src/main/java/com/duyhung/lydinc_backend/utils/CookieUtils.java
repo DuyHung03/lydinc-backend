@@ -7,10 +7,16 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class CookieUtils {
-    public void setCookie(String name, String token, int expiry, HttpServletResponse response) {
+    public void setCookie(
+            String name,
+            String token,
+            int expiry,
+            HttpServletResponse response,
+            String path
+    ) {
         Cookie cookie = new Cookie(name, token);
         cookie.setMaxAge(expiry);
-        cookie.setPath("/");
+        cookie.setPath(path);
         response.addCookie(cookie);
     }
 

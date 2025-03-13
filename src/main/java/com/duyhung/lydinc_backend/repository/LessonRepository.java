@@ -49,4 +49,8 @@ public interface LessonRepository extends JpaRepository<Lesson, String> {
     @Query(value = "delete from Lesson l where l.lessonId = ?1")
     void deleteLessonByLessonId(String lessonId);
 
+    @Modifying
+    @Query(value = "delete from Lesson l where l.module.course.courseId = ?1")
+    void deleteLessonByCourseId(Integer courseId);
+
 }

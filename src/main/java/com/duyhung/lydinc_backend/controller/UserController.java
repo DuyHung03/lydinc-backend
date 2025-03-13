@@ -21,18 +21,8 @@ public class UserController {
         return ResponseEntity.ok(userService.getUserInfo(userId));
     }
 
-    @GetMapping("/get-all")
-    public ResponseEntity<?> getAllAccounts(
-            @RequestParam(required = false) String searchValue,
-            @RequestParam(required = false) Integer universityId,
-            @RequestParam Integer orderBy,
-            @RequestParam int pageNo,
-            @RequestParam int pageSize
-    ) {
-        return ResponseEntity.ok(userService.getAllAccounts(searchValue, universityId, orderBy, pageNo, pageSize));
-    }
 
-    @GetMapping("/get-all-students")
+    @GetMapping("/get-all-external-students")
     public ResponseEntity<?> getAllStudents() {
         return ResponseEntity.ok(userService.getAllStudents());
     }

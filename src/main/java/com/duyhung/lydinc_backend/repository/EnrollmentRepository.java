@@ -29,4 +29,8 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Integer>
     @Query(value = "delete from Enrollment e where e.enrollmentId = ?1")
     void deleteByEnrollmentId(Integer id);
 
+    @Modifying
+    @Query(value = "delete from Enrollment e where e.course.courseId = ?1")
+    void deleteByCourseId(Integer courseId);
+
 }
