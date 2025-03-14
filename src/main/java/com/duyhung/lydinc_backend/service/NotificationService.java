@@ -3,7 +3,7 @@ package com.duyhung.lydinc_backend.service;
 import com.duyhung.lydinc_backend.model.Notification;
 import com.duyhung.lydinc_backend.model.dto.NotificationDto;
 import com.duyhung.lydinc_backend.repository.NotificationRepository;
-import com.duyhung.lydinc_backend.service.kafka.KafkaProducerService;
+import com.duyhung.lydinc_backend.websocket.NotificationWebSocketHandler;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +20,7 @@ public class NotificationService {
     private static final Logger logger = LoggerFactory.getLogger(NotificationService.class);
 
     private final NotificationRepository notificationRepository;
-    private final KafkaProducerService kafkaProducerService;
+    private final NotificationWebSocketHandler notificationWebSocketHandler;
 
     public void sendNotificationToUniversityStudents(Integer universityId, String message) {
         try {
@@ -34,9 +34,8 @@ public class NotificationService {
             notificationRepository.save(notification);
             logger.info("Notification saved for universityId: {} - Message: {}", universityId, message);
 
-            // Gửi qua Kafka
-            kafkaProducerService.sendNotification(notification);
-            logger.info("Notification sent via Kafka for universityId: {}", universityId);
+            notificationWebSocketHandler.sendNotification(notification);
+            logger.info("Notification sent for universityId: {}", universityId);
 
         } catch (Exception e) {
             logger.error("Error sending notification to universityId {}: {}", universityId, e.getMessage(), e);
@@ -55,8 +54,7 @@ public class NotificationService {
             notificationRepository.save(notification);
             logger.info("Notification saved for user: {} - Message: {}", userId, message);
 
-            // Gửi qua Kafka
-            kafkaProducerService.sendNotification(notification);
+            notificationWebSocketHandler.sendNotification(notification);
             logger.info("Notification sent via Kafka for user: {}", userId);
 
         } catch (Exception e) {
