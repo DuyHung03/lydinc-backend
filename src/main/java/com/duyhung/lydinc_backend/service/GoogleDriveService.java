@@ -31,6 +31,8 @@ public class GoogleDriveService {
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
     @Value("${google-drive.parent-folder-id}")
     public String parentFolderId;
+    @Value("${google-drive.media-folder-id}")
+    public String mediaFolderId;
 
     private static String getPathToGoogleClient() {
         String currentDir = System.getProperty("user.dir");
@@ -108,11 +110,10 @@ public class GoogleDriveService {
 
     public Map<String, String> uploadFileAndReturnUrl(MultipartFile multipartFile) throws IOException, GeneralSecurityException {
         Drive driveService = createDriveService();
-        String folderId = "10PaudcvfvSCvNHziQSFXCb1_hz1yervz"; // Folder ID
 
         File fileMetadata = new File();
         fileMetadata.setName(multipartFile.getOriginalFilename());
-        fileMetadata.setParents(Collections.singletonList(folderId));
+        fileMetadata.setParents(Collections.singletonList(mediaFolderId));
 
         // Upload file to Google Drive
         try (InputStream inputStream = multipartFile.getInputStream()) {

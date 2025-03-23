@@ -36,13 +36,18 @@ public class CourseService extends AbstractService {
     private final LessonRepository lessonRepository;
     private final ExcelPracticeLinkRepository excelPracticeLinkRepository;
 
+    /**
+     * Fetches paginated courses for a lecturer.
+     */
     public PaginationResponse<CourseDto> getCourseByLecturer(String lecturerId, int pageNo, int pageSize) {
         logger.info("Fetching courses for lecturer with ID '{}'", lecturerId);
+
         Pageable pageable = PageRequest.of(pageNo, pageSize);
         Page<Course> coursesPage = courseRepository.findByLecturerId(lecturerId, pageable).orElseThrow(() -> {
             logger.warn("No courses found for lecturer '{}'", lecturerId);
             return new RuntimeException("Course not found");
         });
+
         List<Course> courses = coursesPage.getContent();
         User lecturer = userRepository.findById(lecturerId).orElseThrow(() -> {
             logger.warn("Lecturer '{}' not found", lecturerId);
@@ -51,93 +56,71 @@ public class CourseService extends AbstractService {
 
         logger.info("Found {} courses for lecturer '{}'", courses.size(), lecturerId);
 
-        List<CourseDto> courseDtos = courses.stream().map(
-                course -> CourseDto.builder()
-                        .courseId(course.getCourseId())
-                        .title(course.getTitle())
-                        .description(course.getDescription())
-                        .thumbnail(course.getThumbnail())
-                        .enrollmentDate(course.getEnrollmentDate())
-                        .status(course.getStatus())
-                        .lecturerId(lecturerId)
-                        .lecturerName(lecturer.getUsername())
-                        .lecturerEmail(lecturer.getEmail())
-                        .lecturerPhoto(lecturer.getPhotoUrl())
-                        .privacy(course.getPrivacy())
-                        .build()
+        // Convert Course entities to DTOs
+        List<CourseDto> courseDtos = courses.stream().map(course -> CourseDto.builder()
+                .courseId(course.getCourseId())
+                .title(course.getTitle())
+                .description(course.getDescription())
+                .thumbnail(course.getThumbnail())
+                .enrollmentDate(course.getEnrollmentDate())
+                .status(course.getStatus())
+                .lecturerId(lecturerId)
+                .lecturerName(lecturer.getUsername())
+                .lecturerEmail(lecturer.getEmail())
+                .lecturerPhoto(lecturer.getPhotoUrl())
+                .privacy(course.getPrivacy())
+                .build()
         ).toList();
-        return new PaginationResponse<>(
-                courseDtos,
-                coursesPage.getTotalPages(),
-                pageNo + 1,
-                pageSize
-        );
+
+        return new PaginationResponse<>(courseDtos, coursesPage.getTotalPages(), pageNo + 1, pageSize);
     }
 
+    /**
+     * Fetches courses for a student based on student ID and optionally university ID.
+     */
     public List<Course> getCourseByStudent(String studentId, Integer universityId) {
         logger.info("Fetching courses for student with ID '{}'", studentId);
 
-        if (universityId != null) {
-            // If universityId is provided, fetch courses by university ID
-            logger.info("Fetching courses for university ID '{}'", universityId);
-            return courseRepository.findByUniversityId(universityId);
-        } else {
-            // If universityId is null, fetch courses by student (user) ID
-            logger.info("Fetching courses for student (user) ID '{}'", studentId);
-            return courseRepository.findByUserId(studentId);
-        }
+        return (universityId != null)
+                ? courseRepository.findByUniversityId(universityId)  // Fetch by university ID
+                : courseRepository.findByUserId(studentId);          // Fetch by student ID
     }
 
-
+    /**
+     * Creates a new course along with its modules.
+     */
     @Transactional
-    public String createNewCourse(
-            String title,
-            List<ModuleDto> modules,
-            String description,
-            String thumbnail,
-            String lecturerId
-    ) {
+    public String createNewCourse(String title, List<ModuleDto> modules, String description, String thumbnail, String lecturerId) {
         logger.info("Creating a new course with title '{}' for lecturer '{}'", title, lecturerId);
 
-        // Save course
         Course course = courseRepository.save(
-                Course.builder()
-                        .title(title)
-                        .lecturerId(lecturerId)
-                        .privacy("public")
-                        .description(description)
-                        .thumbnail(thumbnail)
-                        .build()
+                Course.builder().title(title).lecturerId(lecturerId).privacy("public")
+                        .description(description).thumbnail(thumbnail).build()
         );
 
         logger.info("Course '{}' saved successfully.", course.getCourseId());
 
-        // Save all modules
+        // Save modules related to the course
         modules.forEach(module -> {
-            moduleRepository.save(
-                    Module.builder().moduleId(module.getModuleId())
-                            .moduleTitle(module.getModuleTitle()).level(module.getLevel())
-                            .index(module.getIndex()).status("created")
-                            .parentModuleId(module.getParentModuleId())
-                            .course(course)
-                            .build()
+            moduleRepository.save(Module.builder()
+                    .moduleId(module.getModuleId()).moduleTitle(module.getModuleTitle())
+                    .level(module.getLevel()).index(module.getIndex()).status("created")
+                    .parentModuleId(module.getParentModuleId()).course(course).build()
             );
-            logger.info("Module '{}' for course '{}' saved successfully.",
-                    module.getModuleId(),
-                    course.getCourseId());
+            logger.info("Module '{}' for course '{}' saved successfully.", module.getModuleId(), course.getCourseId());
         });
 
         return "Course and modules created successfully.";
     }
 
+    /**
+     * Updates the privacy settings of a course.
+     */
     @Transactional
-    public void editCoursePrivacy(
-            String privacy,
-            Integer courseId,
-            List<Integer> universityIds,
-            List<Integer> deleteUniversityIds,
-            List<String> userIds
-    ) {
+    public void editCoursePrivacy(String privacy, Integer courseId, List<Integer> universityIds,
+                                  List<Integer> deleteUniversityIds, List<String> userIds) {
+        logger.info("Updating privacy for course '{}'", courseId);
+
         Course targetCourse = courseRepository.findById(courseId).orElseThrow(() -> {
             logger.warn("No course found with ID {}", courseId);
             return new RuntimeException("Course not found");
@@ -145,70 +128,56 @@ public class CourseService extends AbstractService {
 
         targetCourse.setPrivacy(privacy);
         courseRepository.save(targetCourse);
+        logger.info("Updated privacy to '{}' for course '{}'", privacy, courseId);
 
         if (!"public".equals(privacy)) {
             enrollmentService.assignUniversityToCourse(universityIds, deleteUniversityIds, targetCourse, userIds);
         }
-
-        logger.info("Privacy settings updated for course '{}'", targetCourse.getCourseId());
     }
 
-
+    /**
+     * Retrieves privacy details for a given course.
+     */
     public CoursePrivacy getCoursePrivacy(Integer courseId) {
-        logger.info("Fetching course privacy data for courseId: {}", courseId);
+        logger.info("Fetching privacy settings for course '{}'", courseId);
 
         List<Object[]> universityRecords = courseRepository.findCoursePrivacyUniversity(courseId);
         List<Object[]> userRecords = courseRepository.findCoursePrivacyUser(courseId);
 
         if (universityRecords.isEmpty() && userRecords.isEmpty()) {
-            logger.error("No data found for courseId: {}", courseId);
+            logger.error("No privacy data found for course '{}'", courseId);
             return CoursePrivacy.builder()
-                    .courseId(courseId)
-                    .privacy("public")
-                    .universityIds(Collections.emptyList())
-                    .userIds(Collections.emptyList())
-                    .build();
+                    .courseId(courseId).privacy("public")
+                    .universityIds(Collections.emptyList()).userIds(Collections.emptyList()).build();
         }
 
-        String privacy;
-        if (!universityRecords.isEmpty()) {
-            privacy = (String) universityRecords.get(0)[1];
-        } else {
-            privacy = (String) userRecords.get(0)[1];
-        }
+        // Determine privacy from records
+        String privacy = !universityRecords.isEmpty() ? (String) universityRecords.get(0)[1] : (String) userRecords.get(0)[1];
 
-        List<Integer> universityIds = universityRecords.stream()
-                .map(row -> (Integer) row[2])
-                .filter(Objects::nonNull)
-                .toList();
+        List<Integer> universityIds = universityRecords.stream().map(row -> (Integer) row[2]).filter(Objects::nonNull).toList();
+        List<String> userIds = userRecords.stream().map(row -> (String) row[2]).filter(Objects::nonNull).toList();
 
-        List<String> userIds = userRecords.stream()
-                .map(row -> (String) row[2])
-                .filter(Objects::nonNull)
-                .toList();
-
-        logger.info("Fetched courseId: {}, privacy: {}, universityIds: {}, userIds: {}", courseId, privacy, universityIds, userIds);
+        logger.info("Privacy for course '{}': '{}', universityIds: {}, userIds: {}", courseId, privacy, universityIds, userIds);
 
         return CoursePrivacy.builder()
-                .courseId(courseId)
-                .privacy(privacy)
-                .universityIds(universityIds)
-                .userIds(userIds)
-                .build();
+                .courseId(courseId).privacy(privacy)
+                .universityIds(universityIds).userIds(userIds).build();
     }
 
+    /**
+     * Deletes a course and its related data.
+     */
     @Transactional
     public void deleteCourse(Integer courseId) {
-        //delete at enrollment
-        enrollmentRepository.deleteByCourseId(courseId);
-        userCourseRepository.deleteAllByCourseId(courseId);
-        //delete at lessons
-        lessonRepository.deleteLessonByCourseId(courseId);
-        //delete at module
-        moduleRepository.deleteByCourseId(courseId);
-        //delete at link
-        excelPracticeLinkRepository.deleteExcelPracticeLinkByCourseId(courseId);
-        //delete at course
-        courseRepository.deleteById(courseId);
+        logger.info("Deleting course '{}'", courseId);
+
+        enrollmentRepository.deleteByCourseId(courseId); // Remove enrollments
+        userCourseRepository.deleteAllByCourseId(courseId); // Remove user-course relations
+        lessonRepository.deleteLessonByCourseId(courseId); // Remove associated lessons
+        moduleRepository.deleteByCourseId(courseId); // Remove modules
+        excelPracticeLinkRepository.deleteExcelPracticeLinkByCourseId(courseId); // Remove practice links
+        courseRepository.deleteById(courseId); // Finally, delete the course
+
+        logger.info("Successfully deleted course '{}'", courseId);
     }
 }

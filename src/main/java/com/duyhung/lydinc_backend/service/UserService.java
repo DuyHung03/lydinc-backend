@@ -44,6 +44,15 @@ public class UserService extends AbstractService {
     @Value("${redis.reset-password-base-key}")
     private String redisResetPwBaseKey;
 
+    /**
+     * Creates multiple student accounts from provided registration requests
+     * Generates random passwords if not provided, assigns university and roles
+     * Sends account creation emails with credentials
+     *
+     * @param requests List of registration requests containing student details
+     * @return Success message
+     * @throws RuntimeException if user already exists or university not found
+     */
     @Transactional
     public String createStudentAccounts(List<RegisterRequest> requests) {
         requests.forEach(request -> {
@@ -92,6 +101,16 @@ public class UserService extends AbstractService {
         return "Create account and send email successfully!";
     }
 
+    /**
+     * Retrieves paginated list of user accounts with filtering options
+     *
+     * @param searchValue  Text to search in usernames
+     * @param universityId Filter by university ID
+     * @param orderBy      Sorting order (not currently implemented)
+     * @param pageNo       Page number (0-based)
+     * @param pageSize     Number of items per page
+     * @return Paginated response of user DTOs
+     */
     public PaginationResponse<UserDto> getAllAccounts(String searchValue, Integer universityId, Integer orderBy, int pageNo, int pageSize) {
         Pageable pageable = PageRequest.of(pageNo, pageSize);
         Page<User> userPage;
@@ -114,7 +133,13 @@ public class UserService extends AbstractService {
         );
     }
 
-
+    /**
+     * Gets detailed user information by user ID
+     *
+     * @param userId ID of the user to retrieve
+     * @return User DTO with basic information
+     * @throws RuntimeException if user not found
+     */
     public UserDto getUserInfo(String userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -130,6 +155,15 @@ public class UserService extends AbstractService {
                 .build();
     }
 
+    /**
+     * Changes user password after validating reset password token
+     *
+     * @param newPassword New password to set
+     * @param token       JWT reset password token
+     * @return Success message
+     * @throws RuntimeException   for invalid token or same password
+     * @throws MessagingException if password change email fails
+     */
     @Transactional
     public String changePassword(String newPassword, String token) throws MessagingException {
         if (!jwtService.verifyToken(token)) {
@@ -161,6 +195,12 @@ public class UserService extends AbstractService {
         return "Password changed successfully!";
     }
 
+    /**
+     * Retrieves all lecturers with basic information
+     *
+     * @return List of lecturer DTOs
+     * @throws RuntimeException if database error occurs
+     */
     public List<UserDto> getAllLecturers() {
         try {
             logger.info("Fetching all students from database");
@@ -178,6 +218,15 @@ public class UserService extends AbstractService {
         }
     }
 
+    /**
+     * Creates a new lecturer account with generated password
+     *
+     * @param username Unique username for the lecturer
+     * @param fullName Lecturer's full name
+     * @param email    Contact email address
+     * @param phone    Contact phone number
+     * @throws RuntimeException if email sending fails
+     */
     @Transactional
     public void createNewLecturer(
             String username,
@@ -209,6 +258,12 @@ public class UserService extends AbstractService {
         }
     }
 
+    /**
+     * Retrieves all students without university association
+     *
+     * @return List of student DTOs
+     * @throws RuntimeException if database error occurs
+     */
     public List<UserDto> getAllStudents() {
         try {
             logger.info("Fetching all students from database");
@@ -226,6 +281,14 @@ public class UserService extends AbstractService {
         }
     }
 
+    /**
+     * Initiates password reset process by sending reset email
+     *
+     * @param username Account username to reset
+     * @return Obfuscated email address that was used
+     * @throws RuntimeException   if email not found
+     * @throws MessagingException if email sending fails
+     */
     public String sendEmailResetPw(String username) throws MessagingException {
         User user = authorizeUserByUsername(username);
         if (user.getEmail() == null) {
@@ -236,11 +299,25 @@ public class UserService extends AbstractService {
         return user.getEmail();
     }
 
+    /**
+     * Generates password reset URL for a username
+     *
+     * @param username Account username to reset
+     * @return Complete reset password URL
+     * @throws RuntimeException if username not found
+     */
     public String getResetPasswordUrl(String username) {
         authorizeUserByUsername(username);
         return generateResetPasswordUrl(username);
     }
 
+    /**
+     * Generates secure reset password URL with JWT token
+     * Stores token in Redis for validation
+     *
+     * @param username Account username
+     * @return Complete reset password URL
+     */
     private String generateResetPasswordUrl(String username) {
         String resetPwToken = jwtService.generateResetPasswordToken(username);
         String key = redisResetPwBaseKey + username;
@@ -249,12 +326,24 @@ public class UserService extends AbstractService {
         return "http://localhost:5173/reset-password?token=" + resetPwToken;
     }
 
+    /**
+     * Authorizes and retrieves user by username
+     *
+     * @param username Account username
+     * @return Found User entity
+     * @throws RuntimeException if user not found
+     */
     private User authorizeUserByUsername(String username) {
         return userRepository.checkUserExist(username).orElseThrow(
                 () -> new RuntimeException("Username not found")
         );
     }
 
+    /**
+     * Generates random 12-character password with mixed characters
+     *
+     * @return Generated password
+     */
     private String generateRandomPassword() {
         String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
         SecureRandom random = new SecureRandom();

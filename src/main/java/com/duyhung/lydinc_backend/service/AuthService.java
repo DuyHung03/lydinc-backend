@@ -3,19 +3,14 @@ package com.duyhung.lydinc_backend.service;
 import com.duyhung.lydinc_backend.exception.AuthValidationException;
 import com.duyhung.lydinc_backend.exception.JwtValidationException;
 import com.duyhung.lydinc_backend.model.Role;
-import com.duyhung.lydinc_backend.model.University;
 import com.duyhung.lydinc_backend.model.User;
 import com.duyhung.lydinc_backend.model.auth.LoginRequest;
-import com.duyhung.lydinc_backend.model.auth.RegisterRequest;
 import com.duyhung.lydinc_backend.repository.RoleRepository;
-import com.duyhung.lydinc_backend.repository.UniversityRepository;
 import com.duyhung.lydinc_backend.repository.UserRepository;
 import com.duyhung.lydinc_backend.utils.CookieUtils;
 import io.jsonwebtoken.Claims;
-import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -28,9 +23,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.security.SecureRandom;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -54,24 +47,39 @@ public class AuthService extends AbstractService {
     @Value("${jwt.refreshToken-expiration}")
     private int REFRESH_TOKEN_EXPIRY_DATE;
 
+    /**
+     * Handles user login authentication.
+     *
+     * @param loginRequest User credentials.
+     * @param response     HTTP response to set cookies.
+     * @return Response entity indicating success or failure.
+     */
     public ResponseEntity<?> login(LoginRequest loginRequest, HttpServletResponse response) {
         try {
             logger.info("Attempting login for username: {}", loginRequest.getUsername());
 
+            // Authenticate user credentials
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             loginRequest.getUsername(), loginRequest.getPassword()
                     ));
 
             User user = (User) authentication.getPrincipal();
+
+            // Check if the user needs to reset their password
             if (user.getIsAccountGranted().equals(1) && user.getIsPasswordChanged().equals(0)) {
+                logger.warn("User {} must reset password before proceeding", user.getUsername());
                 return ResponseEntity.ok(userService.getResetPasswordUrl(user.getUsername()));
             }
+
+            // Generate tokens
             String accessToken = jwtUtils.generateAccessToken(user.getUsername(), user.getUserId());
             String refreshToken = jwtUtils.generateRefreshToken(user.getUsername(), user.getUserId());
 
+            // Set tokens in cookies
             cookieUtils.setCookie("accessToken", accessToken, ACCESS_TOKEN_EXPIRY_DATE / 1000, response, "/");
             cookieUtils.setCookie("refreshToken", refreshToken, REFRESH_TOKEN_EXPIRY_DATE / 1000, response, "auth/refreshToken");
+
             logger.info("User {} logged in successfully", user.getUsername());
             return ResponseEntity.ok(true);
         } catch (BadCredentialsException e) {
@@ -80,29 +88,36 @@ public class AuthService extends AbstractService {
         }
     }
 
+    /**
+     * Refreshes the access token using a valid refresh token.
+     *
+     * @param request  HTTP request to extract cookies.
+     * @param response HTTP response to set new cookies.
+     * @return Success message if refresh is successful.
+     */
     public String refreshToken(HttpServletRequest request, HttpServletResponse response) {
         try {
             logger.info("Attempting to refresh token");
 
-            // Get refresh token from cookies
+            // Retrieve refresh token from cookies
             String refreshToken = cookieUtils.getCookie(request, "refreshToken");
             if (refreshToken == null || !jwtService.verifyToken(refreshToken)) {
                 logger.error("Invalid or missing refresh token");
                 throw new JwtValidationException("Unauthorized");
             }
 
-            // Extract user info from the refresh token
+            // Extract user information from token
             Claims claims = jwtService.getClaimsFromToken(refreshToken);
             String username = claims.getSubject();
-            String userId = claims.get("id", String.class); // Extract userId from claims
+            String userId = claims.get("id", String.class);
 
-            // Generate new access token with user info
+            // Generate new access token
             String newAccessToken = jwtService.generateAccessToken(username, userId);
 
-            // Set new access token in cookies
+            // Set new token in cookies
             cookieUtils.setCookie("accessToken", newAccessToken, 86400, response, "/");
 
-            logger.info("Token refreshed successfully");
+            logger.info("Token refreshed successfully for user: {}", username);
             return "Refresh token successfully!";
         } catch (JwtValidationException e) {
             logger.error("Token refresh failed: {}", e.getMessage());
@@ -110,6 +125,16 @@ public class AuthService extends AbstractService {
         }
     }
 
+    /**
+     * Registers a new user account.
+     *
+     * @param username User's chosen username.
+     * @param fullName User's full name.
+     * @param password User's password.
+     * @param email    User's email.
+     * @param phone    User's phone number.
+     * @return Success message if registration is successful.
+     */
     public String register(
             String username,
             String fullName,
@@ -117,11 +142,15 @@ public class AuthService extends AbstractService {
             String email,
             String phone
     ) {
+        logger.info("Registering new user: {}", username);
         Optional<User> existingUser = userRepository.checkUserExist(username);
+
         if (existingUser.isPresent()) {
             logger.error("User {} already exists", username);
-            throw new RuntimeException("User " + username + " already exist!");
+            throw new RuntimeException("User " + username + " already exists!");
         }
+
+        // Create new user instance
         User user = User.builder()
                 .username(username)
                 .email(email)
@@ -133,13 +162,14 @@ public class AuthService extends AbstractService {
                 .roles(new HashSet<>())
                 .build();
 
+        // Assign default role
         Role userRole = roleRepository.findByRoleId(1);
         user.getRoles().add(userRole);
 
+        // Save user to the database
         userRepository.save(user);
         logger.info("User {} registered successfully", username);
 
         return "Create account successfully!";
-
     }
 }
